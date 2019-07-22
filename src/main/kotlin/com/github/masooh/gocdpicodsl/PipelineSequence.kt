@@ -1,70 +1,26 @@
 package com.github.masooh.gocdpicodsl
 
-@DslMarker
-annotation class PipelinesDslMarker
-
-//@PipelinesDslMarker
-
-abstract class Pipelines {
-    protected val pipelines = mutableListOf<Pipeline>()
-
-    fun pipeline(name: String, init: Pipeline.() -> Unit) {
-        val pipeline = Pipeline(name)
-        pipeline.init()
-        pipeline.materials.addAll(lastElements())
-        pipelines.add(pipeline)
-    }
-
-    abstract fun lastElements(): Collection<Material>
-}
-
-class PipelinesParallel : Pipelines() {
-    override fun lastElements(): Collection<Material> {
-
-    }
-
-}
-class PipelineSequence : Pipelines( ){
-    override fun lastElements() = listOf(pipelines.last())
-}
-
-open class Material(val name: String)
-
-class Pipeline(name: String) : Material(name) {
-    val materials = mutableListOf<Material>()
-
-    fun template(name: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    fun parameters(vararg map: Pair<String, String>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-}
-
-fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
-    return PipelineSequence()
-}
-
-fun parallel(init: PipelineSequence.() -> Unit): PipelineSequence {
-    return PipelineSequence()
-}
+open class PipelineGroup
+class PipelineSequence : PipelineGroup()
+class PipelineParallel : PipelineGroup()
+class PipelineSingle : PipelineGroup()
 
 fun main() {
     sequence {
-        (1..3).forEach {
-            pipeline(it.toString()) { }
-        }
+        // add pipeline to parent list
         pipeline("migration") {
             template("")
             parameters(
                     "a" to "b",
                     "b" to "c")
         }
+        // add group of pipeline parent list -> pipeline:group of pipeline
         parallel {
+            // add to parent list
             pipeline("crms") {
                 template("")
             }
+            // add to parent
             sequence {
                 pipeline("keyservice") {
                     template("")
