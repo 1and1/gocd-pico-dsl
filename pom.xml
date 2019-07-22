@@ -10,6 +10,7 @@
 
     <properties>
         <kotlin.version>1.3.41</kotlin.version>
+        <ktor.version>1.2.2</ktor.version>
     </properties>
 
     <build>
@@ -55,6 +56,21 @@
             <artifactId>kotlin-test</artifactId>
             <version>${kotlin.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jgrapht</groupId>
+            <artifactId>jgrapht-core</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-core</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-netty</artifactId>
+            <version>${ktor.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jgrapht</groupId>
