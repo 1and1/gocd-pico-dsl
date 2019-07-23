@@ -1,38 +1,78 @@
 package com.github.masooh.gocdpicodsl
 
-open class PipelineGroup
-class PipelineSequence : PipelineGroup()
-class PipelineParallel : PipelineGroup()
-class PipelineSingle : PipelineGroup()
+import org.jgrapht.Graph
+import org.jgrapht.graph.DefaultEdge
+import org.jgrapht.graph.SimpleDirectedGraph
+import org.jgrapht.graph.SimpleGraph
 
-fun main() {
-    sequence {
-        // add pipeline to parent list
-        pipeline("migration") {
-            template("")
-            parameters(
-                    "a" to "b",
-                    "b" to "c")
+val graph : Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
+
+sealed class PipelineGroup
+
+
+class PipelineSequence : PipelineGroup() {
+    var lastPipeline: PipelineGroup? = null
+
+    fun pipeline(name: String, init: PipelineSingle.() -> Unit): PipelineSingle {
+        val pipelineSingle = PipelineSingle(name)
+        pipelineSingle.init()
+        lastPipeline = pipelineSingle
+
+        // find all open endings
+        val openEndings = graph.vertexSet().filter { graph.outgoingEdgesOf(it).isEmpty() }
+        graph.vertexSet().forEach {
+            println("$it: ${graph.outgoingEdgesOf(it)}")
         }
-        // add group of pipeline parent list -> pipeline:group of pipeline
-        parallel {
-            // add to parent list
-            pipeline("crms") {
-                template("")
+
+        graph.addVertex(pipelineSingle)
+
+        if (graph.vertexSet().size >= 2 && openEndings.isNotEmpty()) {
+            openEndings.forEach {
+                graph.addEdge(it, pipelineSingle)
             }
-            // add to parent
-            sequence {
-                pipeline("keyservice") {
-                    template("")
-                }
-                parallel {
-                    pipeline("ni") { }
-                    pipeline("trinity") { }
-                }
-            }
         }
-        pipeline("promote") {
-            template("")
-        }
+        return pipelineSingle
+    }
+
+    fun parallel(init: PipelineParallel.() -> Unit): PipelineParallel {
+        assert(lastPipeline is PipelineSingle) { "parallel{} must pipeline{}"}
+        val pipelineParallel = PipelineParallel(lastPipeline as PipelineSingle)
+        pipelineParallel.init()
+        lastPipeline = pipelineParallel
+        return pipelineParallel
     }
 }
+
+class PipelineParallel(val forkPipeline: PipelineSingle) : PipelineGroup() {
+    fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
+        val pipelineParallel = PipelineSequence()
+        pipelineParallel.init()
+        return pipelineParallel
+    }
+
+    fun pipeline(name: String, init: PipelineSingle.() -> Unit): PipelineSingle {
+        val pipelineSingle = PipelineSingle(name)
+        pipelineSingle.init()
+
+        graph.addVertex(pipelineSingle)
+        graph.addEdge(forkPipeline, pipelineSingle)
+        return pipelineSingle
+    }
+}
+
+data class PipelineSingle(val name: String) : PipelineGroup() {
+    fun template(name: String) {
+    }
+
+    fun parameters(vararg parameters: Pair<Any, Any>) {
+    }
+}
+
+
+
+fun pipelines(init: PipelineSequence.() -> Unit): PipelineSequence {
+    val pipelineSequence = PipelineSequence()
+    pipelineSequence.init()
+    return pipelineSequence
+}
+
