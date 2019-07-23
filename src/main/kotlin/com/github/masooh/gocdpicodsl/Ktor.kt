@@ -9,6 +9,17 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 
 fun main() {
+//    System.out.appendHTML().html {
+//        body {
+//            div {
+//                a("https://kotlinlang.org") {
+//                    target = ATarget.blank
+//                    +"Main site"
+//                }
+//            }
+//        }
+//    }
+
     embeddedServer(Netty, port = 8080) {
         routing {
             get("/") {
