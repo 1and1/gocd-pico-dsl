@@ -3,76 +3,96 @@ package com.github.masooh.gocdpicodsl
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
-import org.jgrapht.graph.SimpleGraph
 
-val graph : Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
+val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
-sealed class PipelineGroup
+sealed class PipelineGroup {
+    val pipelinesInGroup = mutableListOf<PipelineGroup>()
 
-
-class PipelineSequence : PipelineGroup() {
-    var lastPipeline: PipelineGroup? = null
+    abstract fun getEndingPipelines(): List<PipelineSingle>
+    abstract fun getStartingPipelines(): List<PipelineSingle>
+    abstract fun addPipelineGroupToGraph()
 
     fun pipeline(name: String, init: PipelineSingle.() -> Unit): PipelineSingle {
         val pipelineSingle = PipelineSingle(name)
         pipelineSingle.init()
-        lastPipeline = pipelineSingle
+        pipelineSingle.addPipelineGroupToGraph()
 
-        // find all open endings
-        val openEndings = graph.vertexSet().filter { graph.outgoingEdgesOf(it).isEmpty() }
-        graph.vertexSet().forEach {
-            println("$it: ${graph.outgoingEdgesOf(it)}")
-        }
+        pipelinesInGroup.add(pipelineSingle)
 
-        graph.addVertex(pipelineSingle)
-
-        if (graph.vertexSet().size >= 2 && openEndings.isNotEmpty()) {
-            openEndings.forEach {
-                graph.addEdge(it, pipelineSingle)
-            }
-        }
         return pipelineSingle
     }
+}
+
+fun sequence(parent: PipelineParallel? = null, init: PipelineSequence.() -> Unit): PipelineSequence {
+    val pipelineSequence = PipelineSequence()
+    pipelineSequence.init()
+    pipelineSequence.addPipelineGroupToGraph()
+
+    parent?.pipelinesInGroup?.add(pipelineSequence)
+    return pipelineSequence
+}
+
+class PipelineSequence : PipelineGroup() {
+    override fun addPipelineGroupToGraph() {
+        var fromGroup = pipelinesInGroup.first()
+
+        pipelinesInGroup.drop(1).forEach { toGroup ->
+                fromGroup.getEndingPipelines().forEach { from ->
+                    toGroup.getStartingPipelines().forEach { to ->
+                        graph.addEdge(from, to)
+                    }
+                }
+                fromGroup = toGroup
+        }
+    }
+
+    override fun getStartingPipelines(): List<PipelineSingle> = pipelinesInGroup.first().getStartingPipelines()
+    override fun getEndingPipelines(): List<PipelineSingle> = pipelinesInGroup.last().getEndingPipelines()
 
     fun parallel(init: PipelineParallel.() -> Unit): PipelineParallel {
-        assert(lastPipeline is PipelineSingle) { "parallel{} must pipeline{}"}
-        val pipelineParallel = PipelineParallel(lastPipeline as PipelineSingle)
+        val lastPipeline = pipelinesInGroup.last() as PipelineSingle
+        val pipelineParallel = PipelineParallel(lastPipeline)
         pipelineParallel.init()
-        lastPipeline = pipelineParallel
+        pipelineParallel.addPipelineGroupToGraph()
+
+        pipelinesInGroup.add(pipelineParallel)
+
         return pipelineParallel
     }
 }
 
-class PipelineParallel(val forkPipeline: PipelineSingle) : PipelineGroup() {
-    fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
-        val pipelineParallel = PipelineSequence()
-        pipelineParallel.init()
-        return pipelineParallel
+class PipelineParallel(private val forkPipeline: PipelineSingle) : PipelineGroup() {
+    override fun addPipelineGroupToGraph() {
+        pipelinesInGroup.forEach { toGroup ->
+            forkPipeline.getEndingPipelines().forEach { from ->
+                toGroup.getStartingPipelines().forEach { to ->
+                    graph.addEdge(from, to)
+                }
+            }
+        }
     }
 
-    fun pipeline(name: String, init: PipelineSingle.() -> Unit): PipelineSingle {
-        val pipelineSingle = PipelineSingle(name)
-        pipelineSingle.init()
+    override fun getStartingPipelines() = pipelinesInGroup.flatMap { it.getStartingPipelines() }
+    override fun getEndingPipelines() = pipelinesInGroup.flatMap { it.getEndingPipelines() }
 
-        graph.addVertex(pipelineSingle)
-        graph.addEdge(forkPipeline, pipelineSingle)
-        return pipelineSingle
+    fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
+        return sequence(this, init)
     }
 }
 
 data class PipelineSingle(val name: String) : PipelineGroup() {
+    override fun addPipelineGroupToGraph() {
+        graph.addVertex(this)
+    }
+
+    override fun getStartingPipelines() = listOf(this)
+    override fun getEndingPipelines() = listOf(this)
+
     fun template(name: String) {
     }
 
     fun parameters(vararg parameters: Pair<Any, Any>) {
     }
-}
-
-
-
-fun pipelines(init: PipelineSequence.() -> Unit): PipelineSequence {
-    val pipelineSequence = PipelineSequence()
-    pipelineSequence.init()
-    return pipelineSequence
 }
 
