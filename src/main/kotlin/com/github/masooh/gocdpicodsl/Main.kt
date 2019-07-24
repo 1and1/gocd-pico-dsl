@@ -1,43 +1,49 @@
 package com.github.masooh.gocdpicodsl
 
+import com.github.masooh.gocdpicodsl.Template.*
+
+enum class Template(val stage: String) {
+    PREPARE_DEPLOYMENT("prepare"),
+    DEPLOY_ONE_STAGE_SINGLE_JOB("PREPARE-DEPLOY-VERIFY-TEST"),
+    PROMOTE("APPROVE") // FIXME ist kein Template -> manual stage
+}
+
 fun main() {
     sequence {
         val prepare = pipeline("prepare") {
-            template("")
-            parameters(
-                    "a" to "b",
-                    "b" to "c")
+            template = PREPARE_DEPLOYMENT
+            parameter("a", "b")
         }
         pipeline("migration") {
-            template("") // todo enum/const hinterlegne für templates
+            template = DEPLOY_ONE_STAGE_SINGLE_JOB
             /* todo jeder value muss potentiell eine closure sein, die beim rendern
                  ausgewertet wird
              */
             /*
                 todo ? wie kann ich default Params anreichern -> template pipeline, merge mode
              */
-            parameters(
-                    "a" to "b",
-                    "b" to "c",
-                    "upstream" to prepare.name)
 //            "upstream_name" to { upstreams().filter{ "/.*prepare$/".toRegex() }.first().allNodes.join("/") })
         }
         parallel {
             pipeline("crms") {
-                template("")
+                template = DEPLOY_ONE_STAGE_SINGLE_JOB
             }
             sequence {
                 pipeline("keyservice") {
-                    template("")
+                    template = DEPLOY_ONE_STAGE_SINGLE_JOB
                 }
                 parallel {
-                    pipeline("ni") { }
-                    pipeline("trinity") { }
+                    pipeline("ni") {
+                        template = DEPLOY_ONE_STAGE_SINGLE_JOB
+                    }
+                    pipeline("trinity") {
+                        template = DEPLOY_ONE_STAGE_SINGLE_JOB
+                    }
                 }
             }
         }
         pipeline("promote") {
-            template("")
+            template = PROMOTE
         }
     }
 

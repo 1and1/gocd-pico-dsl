@@ -85,7 +85,10 @@ class PipelineParallel(private val forkPipeline: PipelineSingle) : PipelineGroup
 }
 
 data class PipelineSingle(val name: String) : PipelineGroup() {
-    var parameters : Map<String, String>? = null
+    var parameters = mutableMapOf<String, String>()
+
+    var template : Template? = null
+
     override fun addPipelineGroupToGraph() {
         graph.addVertex(this)
     }
@@ -93,11 +96,8 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
     override fun getStartingPipelines() = listOf(this)
     override fun getEndingPipelines() = listOf(this)
 
-    fun template(name: String) {
-    }
-
-    fun parameters(vararg parameters: Pair<String, String>) {
-        this.parameters = parameters.toMap()
+    fun parameter(key: String, value: String) {
+        parameters.put(key, value)
     }
 }
 
