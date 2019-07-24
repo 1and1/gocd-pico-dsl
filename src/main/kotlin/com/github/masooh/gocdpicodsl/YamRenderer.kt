@@ -10,28 +10,57 @@ import org.yaml.snakeyaml.nodes.NodeTuple
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
 
-
-
 data class YamlPipeline(private val pipelineSingle: PipelineSingle) {
     val template
         get() = pipelineSingle.template
-    val parameters
-        get() = pipelineSingle.parameters
-    val materials : Map<String, Map<String, String>>
+
+    val lock_behavior
+        get() = pipelineSingle.lockBehavior
+
+    val label_template : String
         get() {
-            val incomingEdges = graph.incomingEdgesOf(pipelineSingle)
-            return incomingEdges.map { graph.getEdgeSource(it) }.map {
-                it.name to (mapOf("pipeline" to it.name, "stage" to (it.template?.stage ?: "???")))
+            return "${'$'}{${materials.entries.first().key}}"
+        }
+    val group
+        get() = pipelineSingle.group
+    val parameters: Map<String, String>
+        get() {
+            return pipelineSingle.parameters.map {
+                it.key to it.value.getValue()
             }.toMap()
         }
+
+    val environment_variables
+        get() = pipelineSingle.environmentVariables
+
+
+    val materials : Map<String, Map<String, String>>
+        get() {
+            return when {
+                pipelineSingle.materials.isNotEmpty() -> pipelineSingle.materials.map {
+                    it.name to mapOf(
+                            "package" to it.name
+                    )
+                }.toMap()
+                else -> upstreamPipelines().map {
+                    it.name to mapOf(
+                            "pipeline" to it.name,
+                            "stage" to it.lastStage
+                    )
+                }.toMap()
+            }
+        }
+
+    private fun upstreamPipelines(): List<PipelineSingle> {
+        val incomingEdges = graph.incomingEdgesOf(pipelineSingle)
+        return incomingEdges.map { graph.getEdgeSource(it) }
+    }
 }
 
 data class Test(val name: String)
 
-
 fun main() {
     val options = DumperOptions()
-    options.isPrettyFlow = true
     options.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
     options.isAllowReadOnlyProperties = true
 
@@ -64,6 +93,7 @@ fun Graph<PipelineSingle, DefaultEdge>.toYaml(): String {
     options.isPrettyFlow = true
     options.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
     options.isAllowReadOnlyProperties = true
+    options.isCanonical = false
 
     val yaml = Yaml(NonNullRepresenter, options)
 

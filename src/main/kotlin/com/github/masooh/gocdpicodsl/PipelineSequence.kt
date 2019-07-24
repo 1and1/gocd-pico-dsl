@@ -3,6 +3,7 @@ package com.github.masooh.gocdpicodsl
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
+import java.util.*
 
 /* todo prüfen, wie Klassen struktur ist, wo sind statisch Einstiege. Was mache ich mit Graph
       visitor pattern für Graph?
@@ -84,10 +85,46 @@ class PipelineParallel(private val forkPipeline: PipelineSingle) : PipelineGroup
     }
 }
 
+enum class LockBehavior {
+    lockOnFailure,
+    unlockWhenFinished,
+    none
+}
+
+interface StringValue {
+    fun getValue() : String
+}
+
+class SimpleStringValue(val simpleString: String) : StringValue {
+    override fun getValue(): String {
+        return simpleString
+    }
+}
+
+class LambdaStringValue(val lambda: () -> String) : StringValue {
+    override fun getValue(): String {
+        return lambda()
+    }
+}
+
+
 data class PipelineSingle(val name: String) : PipelineGroup() {
-    var parameters = mutableMapOf<String, String>()
+    var lockBehavior: LockBehavior = LockBehavior.unlockWhenFinished
+
+    val lastStage: String
+        get() {
+            return template?.stage ?: stages.last().name
+        }
+
+    var materials = mutableListOf<Material>()
+
+    var parameters = mutableMapOf<String, StringValue>()
+    var environmentVariables = mutableMapOf<String, String>()
 
     var template : Template? = null
+    var group : Group? = null
+
+    var stages : MutableList<Stage> = mutableListOf()
 
     override fun addPipelineGroupToGraph() {
         graph.addVertex(this)
@@ -97,7 +134,50 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
     override fun getEndingPipelines() = listOf(this)
 
     fun parameter(key: String, value: String) {
-        parameters.put(key, value)
+        parameters[key] = SimpleStringValue(value)
+    }
+
+    fun parameter(key: String, value: () -> String) {
+        parameters[key] = LambdaStringValue(value)
+    }
+
+    fun stage(name: String, manualApproval: Boolean = false, init: Stage.() -> Unit): Stage {
+        val stage = Stage(name, manualApproval)
+        stage.init()
+        stages.add(stage)
+        return stage
+    }
+
+    fun pack(name: String) {
+        val pack = Package(name)
+        materials.add(pack)
     }
 }
 
+sealed class Material(val name: String)
+class Package(name: String) : Material(name)
+
+
+data class Template(val name: String, val stage: String)
+data class Group(val name: String)
+
+data class Stage(val name: String, val manualApproval: Boolean = false) {
+    var jobs : MutableList<Job> = mutableListOf()
+
+    fun job(name: String, init: Job.() -> Unit): Job {
+        val job = Job(name)
+        job.init()
+        jobs.add(job)
+        return job
+    }
+}
+data class Job(val name: String) {
+    val tasks: MutableList<Task> = mutableListOf()
+
+    fun script(script: String) {
+        tasks.add(Script(script))
+    }
+}
+
+interface Task
+data class Script(val script: String) : Task

@@ -1,49 +1,57 @@
 package com.github.masooh.gocdpicodsl
 
-import com.github.masooh.gocdpicodsl.Template.*
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 
-enum class Template(val stage: String) {
-    PREPARE_DEPLOYMENT("prepare"),
-    DEPLOY_ONE_STAGE_SINGLE_JOB("PREPARE-DEPLOY-VERIFY-TEST"),
-    PROMOTE("APPROVE") // FIXME ist kein Template -> manual stage
-}
+val devGroup = Group("dev")
+
+val prepareDeployment = Template("PREPARE-DEPLOYMENT", "prepare")
+val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
 
 fun main() {
     sequence {
         val prepare = pipeline("prepare") {
-            template = PREPARE_DEPLOYMENT
+            pack("staging")
+            template = prepareDeployment
+            group = devGroup
             parameter("a", "b")
         }
         pipeline("migration") {
-            template = DEPLOY_ONE_STAGE_SINGLE_JOB
-            /* todo jeder value muss potentiell eine closure sein, die beim rendern
-                 ausgewertet wird
-             */
-            /*
-                todo ? wie kann ich default Params anreichern -> template pipeline, merge mode
-             */
-//            "upstream_name" to { upstreams().filter{ "/.*prepare$/".toRegex() }.first().allNodes.join("/") })
+            template = deployOneStage
         }
         parallel {
             pipeline("crms") {
-                template = DEPLOY_ONE_STAGE_SINGLE_JOB
+                template = deployOneStage
             }
             sequence {
                 pipeline("keyservice") {
-                    template = DEPLOY_ONE_STAGE_SINGLE_JOB
+                    template = deployOneStage
                 }
                 parallel {
                     pipeline("ni") {
-                        template = DEPLOY_ONE_STAGE_SINGLE_JOB
+                        template = deployOneStage
                     }
                     pipeline("trinity") {
-                        template = DEPLOY_ONE_STAGE_SINGLE_JOB
+                        template = deployOneStage
+                        parameter("UPSTREAM_PIPELINE_NAME") {
+                            shortestPath(prepare, this)
+                        }
                     }
                 }
             }
         }
         pipeline("promote") {
-            template = PROMOTE
+            stage("APPROVE", manualApproval = true) {
+                job("approve") {
+                    script("""
+                        echo "whatever"
+                        do something
+                        ${'$'}{ARTIFACT_GROUPID}:${'$'}{ARTIFACT_ID}:${'$'}{GO_PIPELINE_LABEL}
+                    """.trimIndent())
+                }
+            }
+        }
+        pipeline("prepare-qa") {
+            template = prepareDeployment
         }
     }
 
@@ -52,4 +60,14 @@ fun main() {
     }
 
     println(graph.toYaml())
+}
+
+private fun shortestPath(from: PipelineSingle, to: PipelineSingle): String {
+    val dijkstraAlg = DijkstraShortestPath(graph)
+    val startPath = dijkstraAlg.getPaths(from)
+    val upstreamPipelineName = startPath.getPath(to).edgeList
+            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
+                graph.getEdgeSource(edge).name
+            }
+    return upstreamPipelineName
 }
