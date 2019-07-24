@@ -9,13 +9,21 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
+import kotlinx.html.stream.createHTML
 
 fun main() {
-    embeddedServer(Netty, port = 8080) {
-        routing {
-            get("/") {
-                call.respondText("Hello World!", ContentType.Text.Plain)
+    createHTML().html {
+        body {  }
+    }
+
+    System.out.appendHTML().html {
+        body {
+            div {
+                a("https://kotlinlang.org") {
+                    target = ATarget.blank
+                    +"Main site"
+                }
             }
         }
-    }.start(true)
+    }
 }

@@ -4,6 +4,9 @@ import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
 
+/* todo prüfen, wie Klassen struktur ist, wo sind statisch Einstiege. Was mache ich mit Graph
+      visitor pattern für Graph?
+ */
 val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
 sealed class PipelineGroup {
@@ -82,6 +85,7 @@ class PipelineParallel(private val forkPipeline: PipelineSingle) : PipelineGroup
 }
 
 data class PipelineSingle(val name: String) : PipelineGroup() {
+    var parameters : Map<String, String>? = null
     override fun addPipelineGroupToGraph() {
         graph.addVertex(this)
     }
@@ -92,7 +96,8 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
     fun template(name: String) {
     }
 
-    fun parameters(vararg parameters: Pair<Any, Any>) {
+    fun parameters(vararg parameters: Pair<String, String>) {
+        this.parameters = parameters.toMap()
     }
 }
 
