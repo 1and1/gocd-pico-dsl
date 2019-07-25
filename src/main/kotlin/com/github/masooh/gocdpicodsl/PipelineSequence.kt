@@ -9,8 +9,19 @@ import org.jgrapht.graph.SimpleDirectedGraph
 /* todo prüfen, wie Klassen struktur ist, wo sind statisch Einstiege. Was mache ich mit Graph
       visitor pattern für Graph?
  */
-val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
+@DslMarker
+annotation class GocdPicoDsl
+
+class Context {
+    val postProcessors: MutableList<(PipelineSingle) -> Unit> = mutableListOf()
+
+    fun forAll(enhancePipeline: PipelineSingle.() -> Unit) {
+        postProcessors.add(enhancePipeline)
+    }
+}
+
+@GocdPicoDsl
 sealed class PipelineGroup {
     val pipelinesInGroup = mutableListOf<PipelineGroup>()
 
@@ -19,37 +30,67 @@ sealed class PipelineGroup {
 
     open fun getAllPipelines(): List<PipelineSingle> = pipelinesInGroup.flatMap { it.getAllPipelines() }
 
-    abstract fun addPipelineGroupToGraph()
+    abstract fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>)
 
     fun pipeline(name: String, init: PipelineSingle.() -> Unit): PipelineSingle {
         val pipelineSingle = PipelineSingle(name)
         pipelineSingle.init()
-        pipelineSingle.addPipelineGroupToGraph()
 
         pipelinesInGroup.add(pipelineSingle)
 
         return pipelineSingle
     }
 
-    fun group(name: String, body: () -> Unit) {
-        body()
-        getAllPipelines().filter { it.group == null }.forEach {
-            it.group = name
+    fun group(groupName: String, body: Context.() -> Unit) {
+        val context = Context()
+        context.postProcessors.add { pipeline ->
+            if (pipeline.group == null) {
+                pipeline.group = groupName
+            }
+        }
+
+        context.body()
+
+        getAllPipelines().forEach { pipeline ->
+            context.postProcessors.forEach { processor ->
+                pipeline.apply(processor)
+            }
         }
     }
 }
 
-fun sequence(parent: PipelineParallel? = null, init: PipelineSequence.() -> Unit): PipelineSequence {
-    val pipelineSequence = PipelineSequence()
-    pipelineSequence.init()
-    pipelineSequence.addPipelineGroupToGraph()
+class GocdConfig {
+    val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
-    parent?.pipelinesInGroup?.add(pipelineSequence)
-    return pipelineSequence
+    val pipelines : MutableList<PipelineGroup> = mutableListOf()
+
+    fun environments() {}
+
+    fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
+        val pipelineSequence = PipelineSequence()
+        pipelineSequence.init()
+        pipelineSequence.addPipelineGroupToGraph(graph)
+
+        pipelines.add(pipelineSequence)
+        return pipelineSequence
+    }
+
+    fun parallel(init: PipelineParallel.() -> Unit): PipelineParallel {
+        val pipelineSequence = PipelineParallel(null)
+        pipelineSequence.init()
+        pipelineSequence.addPipelineGroupToGraph(graph)
+
+        pipelines.add(pipelineSequence)
+        return pipelineSequence
+    }
 }
 
+fun gocd(init: GocdConfig.() -> Unit) = GocdConfig().apply(init)
+
 class PipelineSequence : PipelineGroup() {
-    override fun addPipelineGroupToGraph() {
+    override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
+        pipelinesInGroup.forEach {it.addPipelineGroupToGraph(graph)}
+
         var fromGroup = pipelinesInGroup.first()
 
         pipelinesInGroup.drop(1).forEach { toGroup ->
@@ -69,7 +110,7 @@ class PipelineSequence : PipelineGroup() {
         val lastPipeline = if (pipelinesInGroup.isNotEmpty()) pipelinesInGroup.last() as PipelineSingle else null
         val pipelineParallel = PipelineParallel(lastPipeline)
         pipelineParallel.init()
-        pipelineParallel.addPipelineGroupToGraph()
+//        pipelineParallel.addPipelineGroupToGraph(graph)
 
         pipelinesInGroup.add(pipelineParallel)
 
@@ -78,7 +119,8 @@ class PipelineSequence : PipelineGroup() {
 }
 
 class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGroup() {
-    override fun addPipelineGroupToGraph() {
+    override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
+        pipelinesInGroup.forEach {it.addPipelineGroupToGraph(graph)}
         if (forkPipeline != null) {
             pipelinesInGroup.forEach { toGroup ->
                 forkPipeline.getEndingPipelines().forEach { from ->
@@ -94,7 +136,12 @@ class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGrou
     override fun getEndingPipelines() = pipelinesInGroup.flatMap { it.getEndingPipelines() }
 
     fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
-        return sequence(this, init)
+        val pipelineSequence = PipelineSequence()
+        pipelineSequence.init()
+//        pipelineSequence.addPipelineGroupToGraph(graph)
+
+        this.pipelinesInGroup.add(pipelineSequence)
+        return pipelineSequence
     }
 }
 
@@ -115,7 +162,7 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
     var stages : MutableList<Stage> = mutableListOf()
     var materials: Materials? = null
 
-    override fun addPipelineGroupToGraph() {
+    override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
         graph.addVertex(this)
     }
 
@@ -149,13 +196,13 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
         return materials
     }
 }
-
-fun PipelineSingle.shortestPath(to: PipelineSingle): String {
-    val dijkstraAlg = DijkstraShortestPath(graph)
-    val startPath = dijkstraAlg.getPaths(this)
-    val upstreamPipelineName = startPath.getPath(to).edgeList
-            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
-                graph.getEdgeSource(edge).name
-            }
-    return upstreamPipelineName
-}
+//
+//fun PipelineSingle.shortestPath(to: PipelineSingle): String {
+//    val dijkstraAlg = DijkstraShortestPath(graph)
+//    val startPath = dijkstraAlg.getPaths(this)
+//    val upstreamPipelineName = startPath.getPath(to).edgeList
+//            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
+//                graph.getEdgeSource(edge).name
+//            }
+//    return upstreamPipelineName
+//}

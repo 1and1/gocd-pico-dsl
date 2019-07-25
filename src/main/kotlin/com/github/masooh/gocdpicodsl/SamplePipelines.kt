@@ -8,72 +8,76 @@ val prepareDeployment = Template("PREPARE-DEPLOYMENT", "prepare")
 val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
 
 fun main() {
-    sequence {
-        group("dev") {
-            val prepare = pipeline("prepare") {
-                template = prepareDeployment
-                group = "init"
-                parameter("a", "b")
-                materials {
-                    repoPackage("staging-package")
+    val gocd = gocd {
+        sequence {
+            group("dev") {
+                val prepare = pipeline("prepare") {
+                    template = prepareDeployment
+                    group = "init"
+                    parameter("a", "b")
+                    materials {
+                        repoPackage("staging-package")
+                    }
                 }
-            }
-            pipeline("migration") {
-                template = deployOneStage
-            }
-            parallel {
-                pipeline("crms") {
+                pipeline("migration") {
                     template = deployOneStage
                 }
-                sequence {
-                    pipeline("keyservice") {
+                parallel {
+                    pipeline("crms") {
                         template = deployOneStage
                     }
-                    parallel {
-                        pipeline("ni") {
+                    sequence {
+                        pipeline("keyservice") {
                             template = deployOneStage
                         }
-                        /* todo pipeline(trinityArtifact, "deploy") -> basierend auf artifact upstream finden
-                             Achtung ist ACDC spezifisch
-                         */
-                        pipeline("trinity") {
-                            template = deployOneStage
-                            parameter("UPSTREAM_PIPELINE_NAME") {
-                                prepare.shortestPath(this)
+                        parallel {
+                            pipeline("ni") {
+                                template = deployOneStage
                             }
-                        }
-                        deploy("ni") {
-                            template = Template("foo", "sdklfj")
+                            /* todo pipeline(trinityArtifact, "deploy") -> basierend auf artifact upstream finden
+                                 Achtung ist ACDC spezifisch
+                             */
+                            pipeline("trinity") {
+                                template = deployOneStage
+                                parameter("UPSTREAM_PIPELINE_NAME") {
+                                        ""
+//                                    prepare.shortestPath(this)
+                                }
+                            }
+                            deploy("ni") {
+                                template = Template("foo", "sdklfj")
+                            }
                         }
                     }
                 }
-            }
-            pipeline("promote") {
-                // todo stage
-                stage("APPROVE", manualApproval = true) {
-                    job("approve") {
-                        script("""
+                pipeline("promote") {
+                    // todo stage
+                    stage("APPROVE", manualApproval = true) {
+                        job("approve") {
+                            script("""
                         echo "whatever"
                         do something
                         ${'$'}{ARTIFACT_GROUPID}:${'$'}{ARTIFACT_ID}:${'$'}{GO_PIPELINE_LABEL}
                     """.trimIndent())
+                        }
                     }
                 }
             }
-        }
-        group("qa") {
-            pipeline("prepare-qa") {
-                template = prepareDeployment
+            group("qa") {
+                pipeline("prepare-qa") {
+                    template = prepareDeployment
+                }
             }
         }
+
     }
 
-    graph.edgeSet().forEach { edge ->
+    gocd.graph.edgeSet().forEach { edge ->
         println("$edge")
     }
 
-    println(graph.toYaml())
-    println(graph.toDot(plantUmlWrapper = true))
+    println(gocd.graph.toYaml())
+    println(gocd.graph.toDot(plantUmlWrapper = true))
 }
 
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
