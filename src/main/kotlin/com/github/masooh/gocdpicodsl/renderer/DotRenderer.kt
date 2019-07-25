@@ -14,6 +14,7 @@ fun Graph<PipelineSingle, DefaultEdge>.toDot(plantUmlWrapper: Boolean = false): 
         writer.appendln("@startuml")
     }
     writer.appendln("digraph Pipelines {")
+    writer.appendln("    rankdir=\"LR\"")
 
     this.vertexSet().forEach { pipeline ->
         writer.appendln("    ${pipeline.dotName} [label=\"${pipeline.dotName}\\n${pipeline.template?.name}\"];")

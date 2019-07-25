@@ -3,6 +3,7 @@ package com.github.masooh.gocdpicodsl
 import com.github.masooh.gocdpicodsl.dsl.Template
 import com.github.masooh.gocdpicodsl.renderer.toDot
 import com.github.masooh.gocdpicodsl.renderer.toYaml
+import java.io.File
 
 val prepareDeployment = Template("PREPARE-DEPLOYMENT", "prepare")
 val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
@@ -39,10 +40,6 @@ fun main() {
                              */
                             pipeline("trinity") {
                                 template = deployOneStage
-                                parameter("UPSTREAM_PIPELINE_NAME") {
-                                        ""
-//                                    prepare.shortestPath(this)
-                                }
                             }
                             deploy("ni") {
                                 template = Template("foo", "sdklfj")
@@ -76,8 +73,8 @@ fun main() {
         println("$edge")
     }
 
-    println(gocd.graph.toYaml())
-    println(gocd.graph.toDot(plantUmlWrapper = true))
+    File("graph.yml").writeText(gocd.graph.toYaml())
+    File("graph.dot").writeText(gocd.graph.toDot(plantUmlWrapper = true))
 }
 
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {

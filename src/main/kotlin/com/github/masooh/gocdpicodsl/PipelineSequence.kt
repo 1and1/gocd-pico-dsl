@@ -24,6 +24,7 @@ class Context {
 @GocdPicoDsl
 sealed class PipelineGroup {
     val pipelinesInGroup = mutableListOf<PipelineGroup>()
+    val graphProcessors = mutableListOf<PipelineSingle.(Graph<PipelineSingle, DefaultEdge>)-> Unit>()
 
     abstract fun getEndingPipelines(): List<PipelineSingle>
     abstract fun getStartingPipelines(): List<PipelineSingle>
@@ -31,6 +32,10 @@ sealed class PipelineGroup {
     open fun getAllPipelines(): List<PipelineSingle> = pipelinesInGroup.flatMap { it.getAllPipelines() }
 
     abstract fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>)
+
+    open fun runGraphProcessors(graph: Graph<PipelineSingle, DefaultEdge>) {
+        pipelinesInGroup.forEach { it.runGraphProcessors(graph)}
+    }
 
     fun pipeline(name: String, init: PipelineSingle.() -> Unit): PipelineSingle {
         val pipelineSingle = PipelineSingle(name)
@@ -76,20 +81,27 @@ class GocdConfig {
     }
 
     fun parallel(init: PipelineParallel.() -> Unit): PipelineParallel {
-        val pipelineSequence = PipelineParallel(null)
-        pipelineSequence.init()
-        pipelineSequence.addPipelineGroupToGraph(graph)
+        val pipelineParallel = PipelineParallel(null)
+        pipelineParallel.init()
+        pipelineParallel.addPipelineGroupToGraph(graph)
 
-        pipelines.add(pipelineSequence)
-        return pipelineSequence
+        pipelines.add(pipelineParallel)
+        return pipelineParallel
+    }
+
+    fun finalize(): GocdConfig {
+        pipelines.forEach {
+            it.runGraphProcessors(graph)
+        }
+        return this
     }
 }
 
-fun gocd(init: GocdConfig.() -> Unit) = GocdConfig().apply(init)
+fun gocd(init: GocdConfig.() -> Unit) = GocdConfig().apply(init).finalize()
 
 class PipelineSequence : PipelineGroup() {
     override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
-        pipelinesInGroup.forEach {it.addPipelineGroupToGraph(graph)}
+        pipelinesInGroup.forEach { it.addPipelineGroupToGraph(graph) }
 
         var fromGroup = pipelinesInGroup.first()
 
@@ -153,7 +165,7 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
             return template?.stage ?: stages.last().name
         }
 
-    var parameters = mutableMapOf<String, StringValue>()
+    var parameters = mutableMapOf<String, String>()
     var environmentVariables = mutableMapOf<String, String>()
 
     var template : Template? = null
@@ -166,16 +178,18 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
         graph.addVertex(this)
     }
 
+    override fun runGraphProcessors(graph: Graph<PipelineSingle, DefaultEdge>) {
+        graphProcessors.forEach { processor ->
+            this.apply { processor(graph) }
+        }
+    }
+
     override fun getStartingPipelines() = listOf(this)
     override fun getEndingPipelines() = listOf(this)
     override fun getAllPipelines() = listOf(this)
 
     fun parameter(key: String, value: String) {
-        parameters[key] = SimpleStringValue(value)
-    }
-
-    fun parameter(key: String, value: () -> String) {
-        parameters[key] = LambdaStringValue(value)
+        parameters[key] = value
     }
 
     fun environment(key: String, value: String) {
@@ -196,13 +210,23 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
         return materials
     }
 }
-//
-//fun PipelineSingle.shortestPath(to: PipelineSingle): String {
-//    val dijkstraAlg = DijkstraShortestPath(graph)
-//    val startPath = dijkstraAlg.getPaths(this)
-//    val upstreamPipelineName = startPath.getPath(to).edgeList
-//            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
-//                graph.getEdgeSource(edge).name
-//            }
-//    return upstreamPipelineName
-//}
+
+fun shortestPath(graph: Graph<PipelineSingle, DefaultEdge>, from: PipelineSingle, to: PipelineSingle): String {
+    val dijkstraAlg = DijkstraShortestPath(graph)
+    val startPath = dijkstraAlg.getPaths(from)
+    val upstreamPipelineName = startPath.getPath(to).edgeList
+            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
+                graph.getEdgeSource(edge).name
+            }
+    return upstreamPipelineName
+}
+
+fun GocdConfig.shortestPath(from: PipelineSingle, to: PipelineSingle): String {
+    val dijkstraAlg = DijkstraShortestPath(graph)
+    val startPath = dijkstraAlg.getPaths(from)
+    val upstreamPipelineName = startPath.getPath(to).edgeList
+            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
+                graph.getEdgeSource(edge).name
+            }
+    return upstreamPipelineName
+}

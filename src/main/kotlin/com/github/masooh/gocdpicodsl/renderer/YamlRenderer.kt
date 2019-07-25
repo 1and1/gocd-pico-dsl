@@ -25,11 +25,7 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle,  private val
     val group
         get() = pipelineSingle.group
     val parameters: Map<String, String>
-        get() {
-            return pipelineSingle.parameters.map {
-                it.key to it.value.getValue()
-            }.toMap()
-        }
+        get() = pipelineSingle.parameters
 
     val environment_variables
         get() = pipelineSingle.environmentVariables
