@@ -1,5 +1,7 @@
-package com.github.masooh.gocdpicodsl
+package com.github.masooh.gocdpicodsl.renderer
 
+import com.github.masooh.gocdpicodsl.PipelineSingle
+import com.github.masooh.gocdpicodsl.graph
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.traverse.BreadthFirstIterator

@@ -1,5 +1,6 @@
 package com.github.masooh.gocdpicodsl
 
+import com.github.masooh.gocdpicodsl.dsl.*
 import org.jgrapht.Graph
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultEdge
@@ -31,10 +32,9 @@ sealed class PipelineGroup {
     }
 
     fun group(name: String, body: () -> Unit) {
-        val groupName = name
         body()
         getAllPipelines().filter { it.group == null }.forEach {
-            it.group = groupName
+            it.group = name
         }
     }
 }
@@ -96,29 +96,6 @@ class PipelineParallel(private val forkPipeline: PipelineSingle) : PipelineGroup
     }
 }
 
-enum class LockBehavior {
-    lockOnFailure,
-    unlockWhenFinished,
-    none
-}
-
-interface StringValue {
-    fun getValue() : String
-}
-
-class SimpleStringValue(val simpleString: String) : StringValue {
-    override fun getValue(): String {
-        return simpleString
-    }
-}
-
-class LambdaStringValue(val lambda: () -> String) : StringValue {
-    override fun getValue(): String {
-        return lambda()
-    }
-}
-
-
 data class PipelineSingle(val name: String) : PipelineGroup() {
     var lockBehavior: LockBehavior = LockBehavior.unlockWhenFinished
 
@@ -166,43 +143,6 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
         return materials
     }
 }
-
-class Materials {
-    var materials = mutableListOf<Material>()
-
-    /** package is a keyword, method therefore renamed to repoPackage */
-    fun repoPackage(name: String) {
-        val repoPackage = Package(name)
-        materials.add(repoPackage)
-    }
-}
-sealed class Material(val name: String)
-class Package(name: String) : Material(name)
-
-
-data class Template(val name: String, val stage: String)
-data class Group(val name: String)
-
-data class Stage(val name: String, val manualApproval: Boolean = false) {
-    var jobs : MutableList<Job> = mutableListOf()
-
-    fun job(name: String, init: Job.() -> Unit): Job {
-        val job = Job(name)
-        job.init()
-        jobs.add(job)
-        return job
-    }
-}
-data class Job(val name: String) {
-    val tasks: MutableList<Task> = mutableListOf()
-
-    fun script(script: String) {
-        tasks.add(Script(script))
-    }
-}
-
-interface Task
-data class Script(val script: String) : Task
 
 fun PipelineSingle.shortestPath(to: PipelineSingle): String {
     val dijkstraAlg = DijkstraShortestPath(graph)

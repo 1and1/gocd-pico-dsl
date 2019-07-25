@@ -1,5 +1,9 @@
 package com.github.masooh.gocdpicodsl
 
+import com.github.masooh.gocdpicodsl.dsl.Template
+import com.github.masooh.gocdpicodsl.renderer.toDot
+import com.github.masooh.gocdpicodsl.renderer.toYaml
+
 val prepareDeployment = Template("PREPARE-DEPLOYMENT", "prepare")
 val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
 
@@ -45,6 +49,7 @@ fun main() {
                 }
             }
             pipeline("promote") {
+                // todo stage
                 stage("APPROVE", manualApproval = true) {
                     job("approve") {
                         script("""
