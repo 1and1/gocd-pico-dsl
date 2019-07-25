@@ -158,6 +158,12 @@ class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGrou
 }
 
 data class PipelineSingle(val name: String) : PipelineGroup() {
+    val tags = mutableMapOf<String, String>()
+
+    fun tag(key: String, value: String) {
+        tags[key] = value
+    }
+
     var lockBehavior: LockBehavior = LockBehavior.unlockWhenFinished
 
     val lastStage: String
@@ -220,6 +226,22 @@ fun shortestPath(graph: Graph<PipelineSingle, DefaultEdge>, from: PipelineSingle
             }
     return upstreamPipelineName
 }
+
+fun pathToPipeline(graph: Graph<PipelineSingle, DefaultEdge>, to: PipelineSingle, matcher: (PipelineSingle) -> Boolean): String {
+
+    val candidates = graph.vertexSet().filter(matcher)
+    val dijkstraAlg = DijkstraShortestPath(graph)
+
+    val shortestPath = candidates.map { candidate ->
+        val startPath = dijkstraAlg.getPaths(candidate)
+        startPath.getPath(to).edgeList
+    }.minBy { it.size } ?: throw IllegalArgumentException("not path found to $to")
+
+    return shortestPath.joinToString(separator = "/") { edge ->
+        graph.getEdgeSource(edge).name
+    }
+}
+
 
 fun GocdConfig.shortestPath(from: PipelineSingle, to: PipelineSingle): String {
     val dijkstraAlg = DijkstraShortestPath(graph)
