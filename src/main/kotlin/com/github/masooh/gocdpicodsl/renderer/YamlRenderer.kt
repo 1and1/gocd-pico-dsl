@@ -14,7 +14,7 @@ import org.yaml.snakeyaml.representer.Representer
 
 data class YamlPipeline(private val pipelineSingle: PipelineSingle) {
     val template
-        get() = pipelineSingle.template
+        get() = pipelineSingle.template?.name
 
     val lock_behavior
         get() = pipelineSingle.lockBehavior

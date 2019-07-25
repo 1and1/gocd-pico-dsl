@@ -66,7 +66,7 @@ class PipelineSequence : PipelineGroup() {
     override fun getEndingPipelines(): List<PipelineSingle> = pipelinesInGroup.last().getEndingPipelines()
 
     fun parallel(init: PipelineParallel.() -> Unit): PipelineParallel {
-        val lastPipeline = pipelinesInGroup.last() as PipelineSingle
+        val lastPipeline = if (pipelinesInGroup.isNotEmpty()) pipelinesInGroup.last() as PipelineSingle else null
         val pipelineParallel = PipelineParallel(lastPipeline)
         pipelineParallel.init()
         pipelineParallel.addPipelineGroupToGraph()
@@ -77,12 +77,14 @@ class PipelineSequence : PipelineGroup() {
     }
 }
 
-class PipelineParallel(private val forkPipeline: PipelineSingle) : PipelineGroup() {
+class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGroup() {
     override fun addPipelineGroupToGraph() {
-        pipelinesInGroup.forEach { toGroup ->
-            forkPipeline.getEndingPipelines().forEach { from ->
-                toGroup.getStartingPipelines().forEach { to ->
-                    graph.addEdge(from, to)
+        if (forkPipeline != null) {
+            pipelinesInGroup.forEach { toGroup ->
+                forkPipeline.getEndingPipelines().forEach { from ->
+                    toGroup.getStartingPipelines().forEach { to ->
+                        graph.addEdge(from, to)
+                    }
                 }
             }
         }
@@ -127,6 +129,10 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
 
     fun parameter(key: String, value: () -> String) {
         parameters[key] = LambdaStringValue(value)
+    }
+
+    fun environment(key: String, value: String) {
+        environmentVariables[key] = value
     }
 
     fun stage(name: String, manualApproval: Boolean = false, init: Stage.() -> Unit): Stage {
