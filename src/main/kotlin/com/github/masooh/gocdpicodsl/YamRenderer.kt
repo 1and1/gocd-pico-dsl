@@ -37,7 +37,7 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle) {
     val materials : Map<String, Map<String, String>>
         get() {
             return when {
-                pipelineSingle.materials.isNotEmpty() -> pipelineSingle.materials.map {
+                pipelineSingle.materials?.materials?.isNotEmpty() == true -> pipelineSingle.materials!!.materials.map {
                     it.name to mapOf(
                             "package" to it.name
                     )
@@ -55,19 +55,6 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle) {
         val incomingEdges = graph.incomingEdgesOf(pipelineSingle)
         return incomingEdges.map { graph.getEdgeSource(it) }
     }
-}
-
-data class Test(val name: String)
-
-fun main() {
-    val options = DumperOptions()
-    options.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
-    options.isAllowReadOnlyProperties = true
-
-    val yaml = Yaml(options)
-    println(yaml.dump(Test("bla")))
-
-    println(yaml.dump(mapOf("a" to mapOf("c" to 3))))
 }
 
 object NonNullRepresenter: Representer() {
@@ -88,7 +75,6 @@ object NonNullRepresenter: Representer() {
 
 
 fun Graph<PipelineSingle, DefaultEdge>.toYaml(): String {
-
     val options = DumperOptions()
     options.isPrettyFlow = true
     options.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
@@ -100,3 +86,4 @@ fun Graph<PipelineSingle, DefaultEdge>.toYaml(): String {
     val map = BreadthFirstIterator(this).asSequence().toList().map { it.name to YamlPipeline(it) }.toMap()
     return yaml.dump(map)
 }
+

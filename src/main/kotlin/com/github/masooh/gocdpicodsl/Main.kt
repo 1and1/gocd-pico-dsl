@@ -1,57 +1,65 @@
 package com.github.masooh.gocdpicodsl
 
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath
-
-val devGroup = Group("dev")
-
 val prepareDeployment = Template("PREPARE-DEPLOYMENT", "prepare")
 val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
 
 fun main() {
     sequence {
-        val prepare = pipeline("prepare") {
-            pack("staging")
-            template = prepareDeployment
-            group = devGroup
-            parameter("a", "b")
-        }
-        pipeline("migration") {
-            template = deployOneStage
-        }
-        parallel {
-            pipeline("crms") {
+        group("dev") {
+            val prepare = pipeline("prepare") {
+                template = prepareDeployment
+                group = "init"
+                parameter("a", "b")
+                materials {
+                    repoPackage("staging-package")
+                }
+            }
+            pipeline("migration") {
                 template = deployOneStage
             }
-            sequence {
-                pipeline("keyservice") {
+            parallel {
+                pipeline("crms") {
                     template = deployOneStage
                 }
-                parallel {
-                    pipeline("ni") {
+                sequence {
+                    pipeline("keyservice") {
                         template = deployOneStage
                     }
-                    pipeline("trinity") {
-                        template = deployOneStage
-                        parameter("UPSTREAM_PIPELINE_NAME") {
-                            shortestPath(prepare, this)
+                    parallel {
+                        pipeline("ni") {
+                            template = deployOneStage
+                        }
+                        /* todo pipeline(trinityArtifact, "deploy") -> basierend auf artifact upstream finden
+                             Achtung ist ACDC spezifisch
+                         */
+                        pipeline("trinity") {
+                            template = deployOneStage
+                            parameter("UPSTREAM_PIPELINE_NAME") {
+                                prepare.shortestPath(this)
+                            }
+                        }
+                        deploy("ni") {
+                            template = Template("foo", "sdklfj")
                         }
                     }
                 }
             }
-        }
-        pipeline("promote") {
-            stage("APPROVE", manualApproval = true) {
-                job("approve") {
-                    script("""
+            pipeline("promote") {
+                stage("APPROVE", manualApproval = true) {
+                    job("approve") {
+                        script("""
                         echo "whatever"
                         do something
                         ${'$'}{ARTIFACT_GROUPID}:${'$'}{ARTIFACT_ID}:${'$'}{GO_PIPELINE_LABEL}
                     """.trimIndent())
+                    }
                 }
             }
         }
-        pipeline("prepare-qa") {
-            template = prepareDeployment
+        group("qa") {
+            pipeline("prepare-qa") {
+                template = prepareDeployment
+            }
         }
     }
 
@@ -60,14 +68,11 @@ fun main() {
     }
 
     println(graph.toYaml())
+    println(graph.toDot(plantUmlWrapper = true))
 }
 
-private fun shortestPath(from: PipelineSingle, to: PipelineSingle): String {
-    val dijkstraAlg = DijkstraShortestPath(graph)
-    val startPath = dijkstraAlg.getPaths(from)
-    val upstreamPipelineName = startPath.getPath(to).edgeList
-            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
-                graph.getEdgeSource(edge).name
-            }
-    return upstreamPipelineName
+private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
+    pipeline(name) {
+        template = deployOneStage
+    }.apply(block)
 }

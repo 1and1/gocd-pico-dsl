@@ -1,9 +1,9 @@
 package com.github.masooh.gocdpicodsl
 
 import org.jgrapht.Graph
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
-import java.util.*
 
 /* todo prüfen, wie Klassen struktur ist, wo sind statisch Einstiege. Was mache ich mit Graph
       visitor pattern für Graph?
@@ -15,6 +15,9 @@ sealed class PipelineGroup {
 
     abstract fun getEndingPipelines(): List<PipelineSingle>
     abstract fun getStartingPipelines(): List<PipelineSingle>
+
+    open fun getAllPipelines(): List<PipelineSingle> = pipelinesInGroup.flatMap { it.getAllPipelines() }
+
     abstract fun addPipelineGroupToGraph()
 
     fun pipeline(name: String, init: PipelineSingle.() -> Unit): PipelineSingle {
@@ -25,6 +28,14 @@ sealed class PipelineGroup {
         pipelinesInGroup.add(pipelineSingle)
 
         return pipelineSingle
+    }
+
+    fun group(name: String, body: () -> Unit) {
+        val groupName = name
+        body()
+        getAllPipelines().filter { it.group == null }.forEach {
+            it.group = groupName
+        }
     }
 }
 
@@ -116,15 +127,14 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
             return template?.stage ?: stages.last().name
         }
 
-    var materials = mutableListOf<Material>()
-
     var parameters = mutableMapOf<String, StringValue>()
     var environmentVariables = mutableMapOf<String, String>()
 
     var template : Template? = null
-    var group : Group? = null
+    var group : String? = null
 
     var stages : MutableList<Stage> = mutableListOf()
+    var materials: Materials? = null
 
     override fun addPipelineGroupToGraph() {
         graph.addVertex(this)
@@ -132,6 +142,7 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
 
     override fun getStartingPipelines() = listOf(this)
     override fun getEndingPipelines() = listOf(this)
+    override fun getAllPipelines() = listOf(this)
 
     fun parameter(key: String, value: String) {
         parameters[key] = SimpleStringValue(value)
@@ -148,12 +159,23 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
         return stage
     }
 
-    fun pack(name: String) {
-        val pack = Package(name)
-        materials.add(pack)
+    fun materials(init: Materials.() -> Unit): Materials {
+        val materials = Materials()
+        materials.init()
+        this.materials = materials
+        return materials
     }
 }
 
+class Materials {
+    var materials = mutableListOf<Material>()
+
+    /** package is a keyword, method therefore renamed to repoPackage */
+    fun repoPackage(name: String) {
+        val repoPackage = Package(name)
+        materials.add(repoPackage)
+    }
+}
 sealed class Material(val name: String)
 class Package(name: String) : Material(name)
 
@@ -181,3 +203,13 @@ data class Job(val name: String) {
 
 interface Task
 data class Script(val script: String) : Task
+
+fun PipelineSingle.shortestPath(to: PipelineSingle): String {
+    val dijkstraAlg = DijkstraShortestPath(graph)
+    val startPath = dijkstraAlg.getPaths(this)
+    val upstreamPipelineName = startPath.getPath(to).edgeList
+            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
+                graph.getEdgeSource(edge).name
+            }
+    return upstreamPipelineName
+}
