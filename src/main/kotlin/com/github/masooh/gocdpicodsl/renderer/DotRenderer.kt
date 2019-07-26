@@ -3,30 +3,21 @@ package com.github.masooh.gocdpicodsl.renderer
 import com.github.masooh.gocdpicodsl.dsl.PipelineSingle
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
+import org.jgrapht.io.DOTExporter
 import java.io.StringWriter
-
-val PipelineSingle.dotName
-    get() = name.replace("-", "_")
 
 fun Graph<PipelineSingle, DefaultEdge>.toDot(plantUmlWrapper: Boolean = false): String {
     val writer = StringWriter()
     if (plantUmlWrapper) {
         writer.appendln("@startuml")
     }
-    writer.appendln("digraph Pipelines {")
-    writer.appendln("    rankdir=\"LR\"")
-
-    this.vertexSet().forEach { pipeline ->
-        writer.appendln("    ${pipeline.dotName} [label=\"${pipeline.dotName}\\n${pipeline.template?.name}\"];")
-    }
-
-    writer.appendln()
-
-    this.edgeSet().forEach { edge ->
-        writer.appendln("    ${this.getEdgeSource(edge).dotName} -> ${this.getEdgeTarget(edge).dotName};")
-    }
-
-    writer.appendln("}")
+    val dotExporter = DOTExporter<PipelineSingle, DefaultEdge>(
+            { it.name.replace("-", "_") },
+            { "${it.name}\\n${it.template?.name}" },
+            { "" }
+    )
+    dotExporter.putGraphAttribute("rankdir", "LR")
+    dotExporter.exportGraph(this, writer)
     if (plantUmlWrapper) {
         writer.appendln("@enduml")
     }
