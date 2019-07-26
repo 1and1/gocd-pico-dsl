@@ -1,15 +1,18 @@
-package com.github.masooh.gocdpicodsl
+package com.github.masooh.gocdpicodsl.dsl
 
-import com.github.masooh.gocdpicodsl.dsl.*
 import org.jgrapht.Graph
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
+import java.util.*
 
-@DslMarker
-annotation class GocdPicoDsl
+@DslMarker annotation class PipelineGroupMarker
+@DslMarker annotation class PipelineMarker
+@DslMarker annotation class ContextMarker
 
+@ContextMarker
 class Context {
+    val data = mutableMapOf<String, String>()
     val postProcessors: MutableList<(PipelineSingle) -> Unit> = mutableListOf()
 
     fun forAll(enhancePipeline: PipelineSingle.() -> Unit) {
@@ -17,7 +20,12 @@ class Context {
     }
 }
 
-@GocdPicoDsl
+object ContextStack {
+    val context : Deque<Context> = LinkedList()
+    val current: Context?
+            get() = context.peekLast()
+}
+
 sealed class PipelineGroup {
     val pipelinesInGroup = mutableListOf<PipelineGroup>()
     val graphProcessors = mutableListOf<PipelineSingle.(Graph<PipelineSingle, DefaultEdge>)-> Unit>()
@@ -33,33 +41,43 @@ sealed class PipelineGroup {
         pipelinesInGroup.forEach { it.runGraphProcessors(graph)}
     }
 
-    fun pipeline(name: String, init: PipelineSingle.() -> Unit): PipelineSingle {
+    fun pipeline(name: String, block: PipelineSingle.() -> Unit): PipelineSingle {
         val pipelineSingle = PipelineSingle(name)
-        pipelineSingle.init()
+        pipelineSingle.block()
 
         pipelinesInGroup.add(pipelineSingle)
 
         return pipelineSingle
     }
 
-    fun group(groupName: String, body: Context.() -> Unit) {
-        val context = Context()
-        context.postProcessors.add { pipeline ->
-            if (pipeline.group == null) {
-                pipeline.group = groupName
+    fun group(groupName: String, block: Context.() -> Unit): Context {
+        return context({
+            postProcessors.add { pipeline ->
+                if (pipeline.group == null) {
+                    pipeline.group = groupName
+                }
             }
-        }
+        }, block)
+    }
 
-        context.body()
+    fun context(init: Context.() -> Unit = {}, block: Context.() -> Unit): Context {
+        val context = Context()
+        ContextStack.context.add(context)
+
+        context.init()
+        context.block()
 
         getAllPipelines().forEach { pipeline ->
             context.postProcessors.forEach { processor ->
                 pipeline.apply(processor)
             }
         }
+        ContextStack.context.removeLast()
+        return context
     }
 }
 
+@PipelineGroupMarker
 class GocdConfig {
     val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
@@ -95,6 +113,7 @@ class GocdConfig {
 
 fun gocd(init: GocdConfig.() -> Unit) = GocdConfig().apply(init).finalize()
 
+@PipelineGroupMarker
 class PipelineSequence : PipelineGroup() {
     override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
         pipelinesInGroup.forEach { it.addPipelineGroupToGraph(graph) }
@@ -125,6 +144,7 @@ class PipelineSequence : PipelineGroup() {
     }
 }
 
+@PipelineGroupMarker
 class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGroup() {
     override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
         pipelinesInGroup.forEach {it.addPipelineGroupToGraph(graph)}
@@ -151,6 +171,8 @@ class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGrou
     }
 }
 
+@PipelineMarker
+// todo darf nicht von Group erben, da es selbst wieder pipeline() anbietet
 data class PipelineSingle(val name: String) : PipelineGroup() {
     val tags = mutableMapOf<String, String>()
 
@@ -208,6 +230,10 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
         materials.init()
         this.materials = materials
         return materials
+    }
+
+    fun environment(key: String, value: Any) {
+        environmentVariables[key] = value.toString()
     }
 }
 

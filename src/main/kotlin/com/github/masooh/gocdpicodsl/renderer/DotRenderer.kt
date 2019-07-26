@@ -1,6 +1,6 @@
 package com.github.masooh.gocdpicodsl.renderer
 
-import com.github.masooh.gocdpicodsl.PipelineSingle
+import com.github.masooh.gocdpicodsl.dsl.PipelineSingle
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import java.io.StringWriter

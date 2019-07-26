@@ -1,6 +1,9 @@
 package com.github.masooh.gocdpicodsl
 
+import com.github.masooh.gocdpicodsl.dsl.PipelineGroup
+import com.github.masooh.gocdpicodsl.dsl.PipelineSingle
 import com.github.masooh.gocdpicodsl.dsl.Template
+import com.github.masooh.gocdpicodsl.dsl.gocd
 import com.github.masooh.gocdpicodsl.renderer.toDot
 import com.github.masooh.gocdpicodsl.renderer.toYaml
 import java.io.File

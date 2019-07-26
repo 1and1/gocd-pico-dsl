@@ -1,6 +1,6 @@
 package com.github.masooh.gocdpicodsl.renderer
 
-import com.github.masooh.gocdpicodsl.PipelineSingle
+import com.github.masooh.gocdpicodsl.dsl.PipelineSingle
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.traverse.BreadthFirstIterator
@@ -12,7 +12,7 @@ import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
 
 /** class represents the YAML structure */
-data class YamlPipeline(private val pipelineSingle: PipelineSingle,  private val graph: Graph<PipelineSingle, DefaultEdge>) {
+data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val graph: Graph<PipelineSingle, DefaultEdge>) {
     val template
         get() = pipelineSingle.template?.name
 
