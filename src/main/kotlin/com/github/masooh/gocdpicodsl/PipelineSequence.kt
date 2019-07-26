@@ -6,10 +6,6 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
 
-/* todo prüfen, wie Klassen struktur ist, wo sind statisch Einstiege. Was mache ich mit Graph
-      visitor pattern für Graph?
- */
-
 @DslMarker
 annotation class GocdPicoDsl
 
@@ -122,7 +118,6 @@ class PipelineSequence : PipelineGroup() {
         val lastPipeline = if (pipelinesInGroup.isNotEmpty()) pipelinesInGroup.last() as PipelineSingle else null
         val pipelineParallel = PipelineParallel(lastPipeline)
         pipelineParallel.init()
-//        pipelineParallel.addPipelineGroupToGraph(graph)
 
         pipelinesInGroup.add(pipelineParallel)
 
@@ -150,7 +145,6 @@ class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGrou
     fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
         val pipelineSequence = PipelineSequence()
         pipelineSequence.init()
-//        pipelineSequence.addPipelineGroupToGraph(graph)
 
         this.pipelinesInGroup.add(pipelineSequence)
         return pipelineSequence
@@ -217,16 +211,6 @@ data class PipelineSingle(val name: String) : PipelineGroup() {
     }
 }
 
-fun shortestPath(graph: Graph<PipelineSingle, DefaultEdge>, from: PipelineSingle, to: PipelineSingle): String {
-    val dijkstraAlg = DijkstraShortestPath(graph)
-    val startPath = dijkstraAlg.getPaths(from)
-    val upstreamPipelineName = startPath.getPath(to).edgeList
-            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
-                graph.getEdgeSource(edge).name
-            }
-    return upstreamPipelineName
-}
-
 fun pathToPipeline(graph: Graph<PipelineSingle, DefaultEdge>, to: PipelineSingle, matcher: (PipelineSingle) -> Boolean): String {
 
     val candidates = graph.vertexSet().filter(matcher)
@@ -240,15 +224,4 @@ fun pathToPipeline(graph: Graph<PipelineSingle, DefaultEdge>, to: PipelineSingle
     return shortestPath.joinToString(separator = "/") { edge ->
         graph.getEdgeSource(edge).name
     }
-}
-
-
-fun GocdConfig.shortestPath(from: PipelineSingle, to: PipelineSingle): String {
-    val dijkstraAlg = DijkstraShortestPath(graph)
-    val startPath = dijkstraAlg.getPaths(from)
-    val upstreamPipelineName = startPath.getPath(to).edgeList
-            .joinToString(separator = "/", postfix = "/${to.name}") { edge ->
-                graph.getEdgeSource(edge).name
-            }
-    return upstreamPipelineName
 }

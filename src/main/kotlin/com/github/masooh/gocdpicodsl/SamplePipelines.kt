@@ -12,7 +12,7 @@ fun main() {
     val gocd = gocd {
         sequence {
             group("dev") {
-                val prepare = pipeline("prepare") {
+                pipeline("prepare") {
                     template = prepareDeployment
                     group = "init"
                     parameter("a", "b")
@@ -35,9 +35,6 @@ fun main() {
                             pipeline("ni") {
                                 template = deployOneStage
                             }
-                            /* todo pipeline(trinityArtifact, "deploy") -> basierend auf artifact upstream finden
-                                 Achtung ist ACDC spezifisch
-                             */
                             pipeline("trinity") {
                                 template = deployOneStage
                             }

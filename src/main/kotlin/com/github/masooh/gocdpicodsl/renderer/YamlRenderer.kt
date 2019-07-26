@@ -11,6 +11,7 @@ import org.yaml.snakeyaml.nodes.NodeTuple
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
 
+/** class represents the YAML structure */
 data class YamlPipeline(private val pipelineSingle: PipelineSingle,  private val graph: Graph<PipelineSingle, DefaultEdge>) {
     val template
         get() = pipelineSingle.template?.name
@@ -54,12 +55,12 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle,  private val
     }
 }
 
+/** Ignore null values and empty maps */
 object NonNullRepresenter: Representer() {
     init {
         addClassTag(YamlPipeline::class.java, Tag.MAP)
     }
     override fun representJavaBeanProperty(javaBean: Any, property: Property, propertyValue: Any?, customTag: Tag?): NodeTuple? {
-        // if value of property is null, ignore it.
         return when  {
             propertyValue == null -> null
             propertyValue is Map<*, *> && propertyValue.isEmpty() -> null
@@ -69,7 +70,6 @@ object NonNullRepresenter: Representer() {
         }
     }
 }
-
 
 fun Graph<PipelineSingle, DefaultEdge>.toYaml(): String {
     val options = DumperOptions()
