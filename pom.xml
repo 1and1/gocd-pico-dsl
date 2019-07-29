@@ -4,7 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.masooh</groupId>
+    <parent>
+        <groupId>net.oneandone.maven.poms</groupId>
+        <artifactId>foss-parent</artifactId>
+        <version>1.6.1</version>
+    </parent>
+
+    <groupId>net.oneandone.gocd</groupId>
     <artifactId>gocd-pico-dsl</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -43,6 +49,29 @@
                     <jvmTarget>1.8</jvmTarget>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>3.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.oneandone.maven.poms</groupId>
+                        <artifactId>foss-configs</artifactId>
+                        <version>1.2</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <header>/net/oneandone/maven/poms/fossconfigs/license-header.txt</header>
+                    <strictCheck>true</strictCheck>
+                    <includes>
+                        <include>src/**/*.java</include>
+                        <include>src/**/*.kt</include>
+                    </includes>
+                    <mapping>
+                        <java>SLASHSTAR_STYLE</java>
+                    </mapping>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -51,12 +80,6 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
             <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jgrapht</groupId>
