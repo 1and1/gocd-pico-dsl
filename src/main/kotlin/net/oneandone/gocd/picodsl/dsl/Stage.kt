@@ -15,6 +15,7 @@
  */
 package net.oneandone.gocd.picodsl.dsl
 
+// todo stage modellieren
 data class Stage(val name: String, val manualApproval: Boolean = false) {
     var jobs : MutableList<Job> = mutableListOf()
 

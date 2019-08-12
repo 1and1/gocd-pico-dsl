@@ -21,19 +21,37 @@ import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
 import java.util.*
 
-@DslMarker annotation class PipelineGroupMarker
-@DslMarker annotation class PipelineMarker
-@DslMarker annotation class ContextMarker
+@DslMarker annotation class PipelinePicoDslMarker
 
-@ContextMarker
-class Context {
+// todo Pipeline single erbt nicht von Group
+// todo ContextMarker an alle Element, wo Sichtbarkeit fehlt Methode wiederholen und super aufrufen
+
+// @PipelinePicoDslMarker
+sealed class Context(val pipelineGroup: PipelineGroup) {
     val data = mutableMapOf<String, String>()
     val postProcessors: MutableList<(PipelineSingle) -> Unit> = mutableListOf()
 
     fun forAll(enhancePipeline: PipelineSingle.() -> Unit) {
         postProcessors.add(enhancePipeline)
     }
+
+    fun pipeline(name: String, block: PipelineSingle.() -> Unit): PipelineSingle {
+        return pipelineGroup.pipeline(name, block)
+    }
 }
+
+class ParallelContext(val pipelineParallel: PipelineParallel) : Context(pipelineParallel) {
+    fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
+        return pipelineParallel.sequence(init)
+    }
+}
+
+class SequenceContext(val pipelineSequence: PipelineSequence) : Context(pipelineSequence) {
+    fun parallel(init: PipelineParallel.() -> Unit): PipelineParallel {
+        return pipelineSequence.parallel(init)
+    }
+}
+
 
 object ContextStack {
     val context : Deque<Context> = LinkedList()
@@ -41,20 +59,23 @@ object ContextStack {
             get() = context.peekLast()
 }
 
-sealed class PipelineGroup {
-    val pipelinesInGroup = mutableListOf<PipelineGroup>()
+abstract class PipelineContainer {
+    val pipelinesInGroup = mutableListOf<PipelineContainer>()
     val graphProcessors = mutableListOf<PipelineSingle.(Graph<PipelineSingle, DefaultEdge>)-> Unit>()
 
     abstract fun getEndingPipelines(): List<PipelineSingle>
     abstract fun getStartingPipelines(): List<PipelineSingle>
 
     open fun getAllPipelines(): List<PipelineSingle> = pipelinesInGroup.flatMap { it.getAllPipelines() }
-
     abstract fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>)
 
     open fun runGraphProcessors(graph: Graph<PipelineSingle, DefaultEdge>) {
         pipelinesInGroup.forEach { it.runGraphProcessors(graph)}
     }
+}
+
+@PipelinePicoDslMarker
+sealed class PipelineGroup : PipelineContainer() {
 
     fun pipeline(name: String, block: PipelineSingle.() -> Unit): PipelineSingle {
         val pipelineSingle = PipelineSingle(name)
@@ -65,18 +86,18 @@ sealed class PipelineGroup {
         return pipelineSingle
     }
 
-    fun group(groupName: String, block: Context.() -> Unit): Context {
+    fun group(groupName: String, block: Context.() -> Unit): SequenceContext {
         return context({
             postProcessors.add { pipeline ->
                 if (pipeline.group == null) {
                     pipeline.group = groupName
                 }
             }
-        }, block)
+        }, block) as SequenceContext
     }
 
-    fun context(init: Context.() -> Unit = {}, block: Context.() -> Unit): Context {
-        val context = Context()
+    fun context(init: Context.() -> Unit = {}, block: Context.() -> Unit): SequenceContext {
+        val context = createContext()
         ContextStack.context.add(context)
 
         context.init()
@@ -88,11 +109,13 @@ sealed class PipelineGroup {
             }
         }
         ContextStack.context.removeLast()
-        return context
+        return context as SequenceContext
     }
+
+    abstract fun createContext(): Context
 }
 
-@PipelineGroupMarker
+@PipelinePicoDslMarker
 class GocdConfig {
     val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
@@ -128,8 +151,9 @@ class GocdConfig {
 
 fun gocd(init: GocdConfig.() -> Unit) = GocdConfig().apply(init).finalize()
 
-@PipelineGroupMarker
 class PipelineSequence : PipelineGroup() {
+    override fun createContext() = SequenceContext(this)
+
     override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
         pipelinesInGroup.forEach { it.addPipelineGroupToGraph(graph) }
 
@@ -159,8 +183,9 @@ class PipelineSequence : PipelineGroup() {
     }
 }
 
-@PipelineGroupMarker
 class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGroup() {
+    override fun createContext() = ParallelContext(this)
+
     override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
         pipelinesInGroup.forEach {it.addPipelineGroupToGraph(graph)}
         if (forkPipeline != null) {
@@ -186,9 +211,8 @@ class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGrou
     }
 }
 
-@PipelineMarker
 // todo darf nicht von Group erben, da es selbst wieder pipeline() anbietet
-data class PipelineSingle(val name: String) : PipelineGroup() {
+data class PipelineSingle(val name: String) : PipelineContainer() {
     val tags = mutableMapOf<String, String>()
 
     fun tag(key: String, value: String) {

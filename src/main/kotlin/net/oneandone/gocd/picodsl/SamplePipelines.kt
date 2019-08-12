@@ -30,6 +30,9 @@ fun main() {
     val gocd = gocd {
         sequence {
             group("dev") {
+                group("inner-dev") {
+
+                }
                 pipeline("prepare") {
                     template = prepareDeployment
                     group = "init"
@@ -91,7 +94,7 @@ fun main() {
     File("graph.yml").writeText(gocd.graph.toYaml())
     File("graph.dot").writeText(gocd.graph.toDot(plantUmlWrapper = true))
 }
-
+// TODO Tests hinzufügen (auf Workstation schon angefangen)
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
     pipeline(name) {
         template = deployOneStage
