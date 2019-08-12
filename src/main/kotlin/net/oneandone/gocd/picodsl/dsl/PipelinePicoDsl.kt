@@ -145,7 +145,18 @@ class GocdConfig {
         pipelines.forEach {
             it.runGraphProcessors(graph)
         }
+        validate()
         return this
+    }
+
+    private fun validate() {
+        val pipeLineWithoutStageOrTemplate = graph.vertexSet().find { pipeline ->
+            pipeline.template == null && pipeline.stages.size == 0
+        }
+
+        pipeLineWithoutStageOrTemplate?.let {
+            throw IllegalArgumentException("pipeline ${it.name} has neither template nor stage")
+        }
     }
 }
 

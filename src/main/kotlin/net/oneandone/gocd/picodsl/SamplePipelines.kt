@@ -30,15 +30,17 @@ fun main() {
     val gocd = gocd {
         sequence {
             group("dev") {
-                group("inner-dev") {
-
-                }
                 pipeline("prepare") {
                     template = prepareDeployment
                     group = "init"
                     parameter("a", "b")
                     materials {
                         repoPackage("staging-package")
+                    }
+                }
+                group("in-dev") {
+                    pipeline("pipe-in-dev") {
+                        template = deployOneStage
                     }
                 }
                 pipeline("migration") {
