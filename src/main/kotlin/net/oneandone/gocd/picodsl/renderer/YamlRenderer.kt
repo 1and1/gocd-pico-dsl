@@ -36,7 +36,8 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val 
 
     val label_template : String
         get() {
-            return "${'$'}{${materials.entries.first().key}}"
+            val materials = materials.entries
+            return "${'$'}{${materials.first().key}}"
         }
     val group
         get() = pipelineSingle.group

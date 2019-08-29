@@ -93,7 +93,7 @@ sealed class PipelineGroup : PipelineContainer() {
                     pipeline.group = groupName
                 }
             }
-        }, block) as SequenceContext
+        }, block)
     }
 
     fun context(init: Context.() -> Unit = {}, block: Context.() -> Unit): SequenceContext {
@@ -234,6 +234,9 @@ data class PipelineSingle(val name: String) : PipelineContainer() {
 
     val lastStage: String
         get() {
+            require(template != null || stages.size > 0) {
+                "Pipeline has neither template nor stages"
+            }
             return template?.stage ?: stages.last().name
         }
 
