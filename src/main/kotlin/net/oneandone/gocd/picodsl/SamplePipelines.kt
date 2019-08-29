@@ -38,11 +38,6 @@ fun main() {
                         repoPackage("staging-package")
                     }
                 }
-                group("in-dev") {
-                    pipeline("pipe-in-dev") {
-                        template = deployOneStage
-                    }
-                }
                 pipeline("migration") {
                     template = deployOneStage
                 }
