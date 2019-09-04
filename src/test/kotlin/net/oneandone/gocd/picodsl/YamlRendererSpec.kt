@@ -1,13 +1,14 @@
 package net.oneandone.gocd.picodsl
 
 import net.javacrumbs.jsonunit.JsonAssert
+import net.oneandone.gocd.picodsl.dsl.GocdConfig
 import net.oneandone.gocd.picodsl.dsl.Template
 import net.oneandone.gocd.picodsl.dsl.gocd
 import net.oneandone.gocd.picodsl.renderer.toYaml
 import org.assertj.core.api.Assertions
 import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.gherkin.Feature
 import org.spekframework.spek2.style.specification.describe
+import java.io.File
 
 object YamlRendererSpec: Spek({
     describe("empty DSL") {
@@ -21,32 +22,25 @@ object YamlRendererSpec: Spek({
         }
     }
 
-    describe("dsl with with pipeline") {
-        val template1 = Template("template1", "stage1")
-        val gocd = gocd {
-            sequence {
-                pipeline("p1") {
-                    materials {
-                        repoPackage("material1")
-                    }
-                    template = template1
+    describe("Test DSLs against expected Yamls") {
+        mapOf(
+                gocdWithTwoPipelines to "two-pipelines.yaml",
+                gocdStageWithScript to "stage-with-script.yaml"
+        ).forEach { (gocdConfig, expectedYamlFilename) ->
+            describe("generating yaml for $expectedYamlFilename") {
+                val generatedYaml = gocdConfig.graph.toYaml()
+
+                val generatedFiles = File("target/test-generated-yamls")
+                generatedFiles.mkdirs()
+                File(generatedFiles, expectedYamlFilename).writeText(generatedYaml)
+
+                val expectedYaml = YamlRendererSpec::class.java.getResource(expectedYamlFilename).readText()
+
+                it("matches $expectedYamlFilename") {
+                    JsonAssert.assertJsonEquals(expectedYaml.toJson(), generatedYaml.toJson())
                 }
-                pipeline("p2") {
-                    template = template1
-                }
-            }
-        }
-
-        describe("generating yaml") {
-            val generatedYaml = gocd.graph.toYaml()
-
-            println(generatedYaml)
-
-            val expectedYaml = YamlRendererSpec::class.java.getResource("expected.yaml").readText()
-
-            it("upstream pipeline is used as material") {
-                JsonAssert.assertJsonEquals(expectedYaml.toJson(), generatedYaml.toJson())
             }
         }
     }
+
 })

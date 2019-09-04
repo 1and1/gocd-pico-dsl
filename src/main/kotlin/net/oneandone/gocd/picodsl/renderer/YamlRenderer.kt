@@ -16,6 +16,11 @@
 package net.oneandone.gocd.picodsl.renderer
 
 import net.oneandone.gocd.picodsl.dsl.PipelineSingle
+import net.oneandone.gocd.picodsl.dsl.Script
+import net.oneandone.gocd.picodsl.dsl.Stage
+import net.oneandone.gocd.picodsl.renderer.yaml.YamlJob
+import net.oneandone.gocd.picodsl.renderer.yaml.YamlPipeline
+import net.oneandone.gocd.picodsl.renderer.yaml.YamlStage
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.traverse.BreadthFirstIterator
@@ -26,60 +31,21 @@ import org.yaml.snakeyaml.nodes.NodeTuple
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
 
-/** class represents the YAML structure */
-data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val graph: Graph<PipelineSingle, DefaultEdge>) {
-    val template
-        get() = pipelineSingle.template?.name
-
-    val lock_behavior
-        get() = pipelineSingle.lockBehavior
-
-    val label_template : String
-        get() {
-            val materials = materials.entries
-            return "${'$'}{${materials.first().key}}"
-        }
-    val group
-        get() = pipelineSingle.group
-    val parameters: Map<String, String>
-        get() = pipelineSingle.parameters
-
-    val environment_variables
-        get() = pipelineSingle.environmentVariables
-
-
-    val materials : Map<String, Map<String, String>>
-        get() {
-            return when {
-                pipelineSingle.materials?.materials?.isNotEmpty() == true -> pipelineSingle.materials!!.materials.map {
-                    it.name to mapOf(
-                            "package" to it.name
-                    )
-                }.toMap()
-                else -> upstreamPipelines().map {
-                    it.name to mapOf(
-                            "pipeline" to it.name,
-                            "stage" to it.lastStage
-                    )
-                }.toMap()
-            }
-        }
-
-    private fun upstreamPipelines(): List<PipelineSingle> {
-        val incomingEdges = graph.incomingEdgesOf(pipelineSingle)
-        return incomingEdges.map { graph.getEdgeSource(it) }
-    }
-}
-
-/** Ignore null values and empty maps */
 object NonNullRepresenter: Representer() {
+    /* remove class markers like  !!net.oneandone.gocd.picodsl.renderer.YamlPipeline */
     init {
         addClassTag(YamlPipeline::class.java, Tag.MAP)
+        addClassTag(YamlStage::class.java, Tag.MAP)
+        addClassTag(YamlJob::class.java, Tag.MAP)
+        addClassTag(Script::class.java, Tag.MAP)
     }
+
+    /** Ignore null values and empty maps */
     override fun representJavaBeanProperty(javaBean: Any, property: Property, propertyValue: Any?, customTag: Tag?): NodeTuple? {
         return when  {
             propertyValue == null -> null
             propertyValue is Map<*, *> && propertyValue.isEmpty() -> null
+            propertyValue is List<*> && propertyValue.isEmpty() -> null
             else -> {
                 super.representJavaBeanProperty(javaBean, property, propertyValue, customTag)
             }

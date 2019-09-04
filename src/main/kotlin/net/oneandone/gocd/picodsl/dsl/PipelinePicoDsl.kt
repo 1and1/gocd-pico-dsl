@@ -263,6 +263,7 @@ data class PipelineSingle(val name: String) : PipelineContainer() {
     var template: Template? = null
     var group: String? = null
 
+    // todo trennung zwischen Builder f. DSL und Objekt
     var stages: MutableList<Stage> = mutableListOf()
     var materials: Materials? = null
 

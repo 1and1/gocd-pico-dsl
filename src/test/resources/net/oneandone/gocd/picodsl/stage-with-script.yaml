@@ -1,0 +1,16 @@
+p1:
+  label_template: ${material1}
+  lock_behavior: unlockWhenFinished
+  materials:
+    material1:
+      package: material1
+  stages:
+    - QA:
+        approval: manual
+        jobs:
+          jobOne:
+            tasks:
+              - script: echo one
+          jobTwo:
+            tasks:
+              - script: echo two
