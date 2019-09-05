@@ -1,0 +1,34 @@
+p1:
+  label_template: ${material1}
+  lock_behavior: unlockWhenFinished
+  materials:
+    material1:
+      package: material1
+  template: template1
+para1:
+  label_template: ${p1}
+  lock_behavior: unlockWhenFinished
+  materials:
+    p1:
+      pipeline: p1
+      stage: stage1
+  template: template1
+para2:
+  label_template: ${p1}
+  lock_behavior: unlockWhenFinished
+  materials:
+    p1:
+      pipeline: p1
+      stage: stage1
+  template: template2
+p2:
+  label_template: ${para1}
+  lock_behavior: unlockWhenFinished
+  materials:
+    para1:
+      pipeline: para1
+      stage: stage1
+    para2:
+      pipeline: para2
+      stage: stage2
+  template: template1

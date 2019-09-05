@@ -63,7 +63,6 @@ fun main() {
                     }
                 }
                 pipeline("promote") {
-                    // todo stage
                     stage("APPROVE", manualApproval = true) {
                         job("approve") {
                             script("""
@@ -91,7 +90,6 @@ fun main() {
     File("graph.yml").writeText(gocd.graph.toYaml())
     File("graph.dot").writeText(gocd.graph.toDot(plantUmlWrapper = true))
 }
-// TODO Tests hinzufügen (auf Workstation schon angefangen)
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
     pipeline(name) {
         template = deployOneStage

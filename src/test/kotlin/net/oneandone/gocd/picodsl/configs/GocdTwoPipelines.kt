@@ -1,10 +1,8 @@
-package net.oneandone.gocd.picodsl
+package net.oneandone.gocd.picodsl.configs
 
-import net.oneandone.gocd.picodsl.dsl.Template
 import net.oneandone.gocd.picodsl.dsl.gocd
 
-val template1 = Template("template1", "stage1")
-val gocdWithTwoPipelines = gocd {
+val gocdTwoPipelines = gocd {
     sequence {
         pipeline("p1") {
             materials {
@@ -13,7 +11,7 @@ val gocdWithTwoPipelines = gocd {
             template = template1
         }
         pipeline("p2") {
-            template = template1
+            template = template2
         }
     }
 }

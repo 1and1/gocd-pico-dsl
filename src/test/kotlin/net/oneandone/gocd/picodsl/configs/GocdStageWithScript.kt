@@ -1,4 +1,4 @@
-package net.oneandone.gocd.picodsl
+package net.oneandone.gocd.picodsl.configs
 
 import net.oneandone.gocd.picodsl.dsl.gocd
 
