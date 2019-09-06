@@ -1,6 +1,7 @@
 package net.oneandone.gocd.picodsl
 
 import net.javacrumbs.jsonunit.JsonAssert
+import net.oneandone.gocd.picodsl.configs.gocdGrouping
 import net.oneandone.gocd.picodsl.configs.gocdParallel
 import net.oneandone.gocd.picodsl.configs.gocdStageWithScript
 import net.oneandone.gocd.picodsl.configs.gocdTwoPipelines
@@ -11,7 +12,7 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.File
 
-object YamlRendererSpec: Spek({
+object YamlRendererTest: Spek({
     describe("empty DSL") {
         val gocd = gocd { }
         describe("generating yaml") {
@@ -27,7 +28,8 @@ object YamlRendererSpec: Spek({
         mapOf(
                 gocdTwoPipelines to "two-pipelines.yaml",
                 gocdStageWithScript to "stage-with-script.yaml",
-                gocdParallel to "parallel.yaml"
+                gocdParallel to "parallel.yaml",
+                gocdGrouping to "grouping.yaml"
         ).forEach { (gocdConfig, expectedYamlFilename) ->
             describe("generating yaml for $expectedYamlFilename") {
                 val generatedYaml = gocdConfig.graph.toYaml()
@@ -37,7 +39,7 @@ object YamlRendererSpec: Spek({
                 File(generatedFiles, expectedYamlFilename).writeText(generatedYaml)
 
                 println(expectedYamlFilename)
-                val expectedYaml = YamlRendererSpec::class.java.getResource(expectedYamlFilename).readText()
+                val expectedYaml = YamlRendererTest::class.java.getResource(expectedYamlFilename).readText()
 
                 it("matches $expectedYamlFilename") {
                     JsonAssert.assertJsonEquals(expectedYaml.toJson(), generatedYaml.toJson())

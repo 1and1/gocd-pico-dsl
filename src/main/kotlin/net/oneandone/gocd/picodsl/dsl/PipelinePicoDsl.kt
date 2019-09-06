@@ -24,8 +24,6 @@ import java.util.*
 @DslMarker
 annotation class PipelinePicoDslMarker
 
-// todo ContextMarker an alle Element, wo Sichtbarkeit fehlt Methode wiederholen und super aufrufen
-
 @PipelinePicoDslMarker
 sealed class Context(val pipelineGroup: PipelineGroup) {
     val data = mutableMapOf<String, String>()
@@ -58,6 +56,7 @@ object ContextStack {
         get() = context.peekLast()
 }
 
+@PipelinePicoDslMarker
 abstract class PipelineContainer {
     val pipelinesInContainer = mutableListOf<PipelineContainer>()
     val graphProcessors = mutableListOf<PipelineSingle.(Graph<PipelineSingle, DefaultEdge>) -> Unit>()
@@ -73,7 +72,6 @@ abstract class PipelineContainer {
     }
 }
 
-@PipelinePicoDslMarker
 sealed class PipelineGroup : PipelineContainer() {
 
     /** Creates pipeline and adds it to container */

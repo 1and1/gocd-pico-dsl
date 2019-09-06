@@ -10,6 +10,16 @@ import org.jgrapht.graph.DefaultEdge
  * Class represents the YAML structure
  * @see https://github.com/tomzo/gocd-yaml-config-plugin#Format-reference
  * */
+
+data class YamlConfig(private val pipelineList: List<PipelineSingle>, private val graph: Graph<PipelineSingle, DefaultEdge>) {
+    val pipelines
+            get() = pipelineList.map { it.name to YamlPipeline(it, graph) }.toMap()
+
+    // Todo
+//    val environments
+//    val format_version
+}
+
 data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val graph: Graph<PipelineSingle, DefaultEdge>) {
     val template
         get() = pipelineSingle.template?.name

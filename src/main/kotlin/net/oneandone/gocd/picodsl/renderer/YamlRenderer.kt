@@ -17,15 +17,15 @@ package net.oneandone.gocd.picodsl.renderer
 
 import net.oneandone.gocd.picodsl.dsl.PipelineSingle
 import net.oneandone.gocd.picodsl.dsl.Script
-import net.oneandone.gocd.picodsl.dsl.Stage
+import net.oneandone.gocd.picodsl.renderer.yaml.YamlConfig
 import net.oneandone.gocd.picodsl.renderer.yaml.YamlJob
 import net.oneandone.gocd.picodsl.renderer.yaml.YamlPipeline
 import net.oneandone.gocd.picodsl.renderer.yaml.YamlStage
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.traverse.BreadthFirstIterator
-import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.introspector.Property
 import org.yaml.snakeyaml.nodes.NodeTuple
 import org.yaml.snakeyaml.nodes.Tag
@@ -34,6 +34,7 @@ import org.yaml.snakeyaml.representer.Representer
 object NonNullRepresenter: Representer() {
     /* remove class markers like  !!net.oneandone.gocd.picodsl.renderer.YamlPipeline */
     init {
+        addClassTag(YamlConfig::class.java, Tag.MAP)
         addClassTag(YamlPipeline::class.java, Tag.MAP)
         addClassTag(YamlStage::class.java, Tag.MAP)
         addClassTag(YamlJob::class.java, Tag.MAP)
@@ -62,7 +63,8 @@ fun Graph<PipelineSingle, DefaultEdge>.toYaml(): String {
 
     val yaml = Yaml(NonNullRepresenter, options)
 
-    val map = BreadthFirstIterator(this).asSequence().toList().map { it.name to YamlPipeline(it, this) }.toMap()
-    return yaml.dump(map)
+    val listOfPipelines = BreadthFirstIterator(this).asSequence().toList()
+    val config = YamlConfig(listOfPipelines, this)
+    return yaml.dump(config)
 }
 
