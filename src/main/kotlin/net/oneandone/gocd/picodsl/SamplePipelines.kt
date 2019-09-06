@@ -15,10 +15,7 @@
  */
 package net.oneandone.gocd.picodsl
 
-import net.oneandone.gocd.picodsl.dsl.PipelineGroup
-import net.oneandone.gocd.picodsl.dsl.PipelineSingle
-import net.oneandone.gocd.picodsl.dsl.Template
-import net.oneandone.gocd.picodsl.dsl.gocd
+import net.oneandone.gocd.picodsl.dsl.*
 import net.oneandone.gocd.picodsl.renderer.toDot
 import net.oneandone.gocd.picodsl.renderer.toYaml
 import java.io.File
@@ -26,70 +23,84 @@ import java.io.File
 val prepareDeployment = Template("PREPARE-DEPLOYMENT", "prepare")
 val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
 
+val bla = GocdEnvironment("testing")
+
 fun main() {
     val gocd = gocd {
-        sequence {
-            group("dev") {
-                pipeline("prepare") {
-                    template = prepareDeployment
-                    group = "init"
-                    parameter("a", "b")
-                    materials {
-                        repoPackage("staging-package")
+        environments(bla) {
+            environment("testing") {
+                envVar("DEPLOYMENT", "testing")
+            }
+        }
+
+        pipelines {
+            sequence {
+                group("dev") {
+                    forAll {
+                        environment = bla
                     }
-                }
-                pipeline("migration") {
-                    template = deployOneStage
-                }
-                parallel {
-                    pipeline("crms") {
+
+                    pipeline("prepare") {
+                        template = prepareDeployment
+                        group = "init"
+                        parameter("a", "b")
+                        materials {
+                            repoPackage("staging-package")
+                        }
+                    }
+                    pipeline("migration") {
                         template = deployOneStage
                     }
-                    sequence {
-                        pipeline("keyservice") {
+                    parallel {
+                        pipeline("crms") {
                             template = deployOneStage
                         }
-                        parallel {
-                            pipeline("ni") {
+                        sequence {
+                            pipeline("keyservice") {
                                 template = deployOneStage
                             }
-                            pipeline("trinity") {
-                                template = deployOneStage
-                            }
-                            deploy("ni") {
-                                template = Template("foo", "sdklfj")
+                            parallel {
+                                pipeline("ni") {
+                                    template = deployOneStage
+                                }
+                                pipeline("trinity") {
+                                    template = deployOneStage
+                                }
+                                deploy("ni") {
+                                    template = Template("foo", "sdklfj")
+                                }
                             }
                         }
                     }
-                }
-                pipeline("promote") {
-                    stage("APPROVE", manualApproval = true) {
-                        job("approve") {
-                            script("""
+                    pipeline("promote") {
+                        stage("APPROVE", manualApproval = true) {
+                            job("approve") {
+                                script("""
                         echo "whatever"
                         do something
                         ${'$'}{ARTIFACT_GROUPID}:${'$'}{ARTIFACT_ID}:${'$'}{GO_PIPELINE_LABEL}
                     """.trimIndent())
+                            }
                         }
                     }
                 }
-            }
-            group("qa") {
-                pipeline("prepare-qa") {
-                    template = prepareDeployment
+                group("qa") {
+                    pipeline("prepare-qa") {
+                        template = prepareDeployment
+                    }
                 }
             }
         }
-
     }
 
-    gocd.graph.edgeSet().forEach { edge ->
+    gocd.pipelines.graph.edgeSet().forEach { edge ->
         println("$edge")
     }
 
-    File("graph.yml").writeText(gocd.graph.toYaml())
-    File("graph.dot").writeText(gocd.graph.toDot(plantUmlWrapper = true))
+    File("graph.yml").writeText(gocd.pipelines.graph.toYaml())
+    File("graph.dot").writeText(gocd.pipelines.graph.toDot(plantUmlWrapper = true))
 }
+
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
     pipeline(name) {
         template = deployOneStage

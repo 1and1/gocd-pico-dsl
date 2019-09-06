@@ -70,6 +70,10 @@ abstract class PipelineContainer {
     open fun runGraphProcessors(graph: Graph<PipelineSingle, DefaultEdge>) {
         pipelinesInContainer.forEach { it.runGraphProcessors(graph) }
     }
+
+    open fun finish() {
+        pipelinesInContainer.forEach(PipelineContainer::finish)
+    }
 }
 
 sealed class PipelineGroup : PipelineContainer() {
@@ -105,11 +109,56 @@ sealed class PipelineGroup : PipelineContainer() {
 
 @PipelinePicoDslMarker
 class GocdConfig {
+    val pipelines = GocdPipelines()
+    val environments = GocdEnvironments()
+
+    fun pipelines(block: GocdPipelines.() -> Unit) {
+        pipelines.block()
+    }
+
+    fun environments(vararg environmentsToAdd: GocdEnvironment, block: GocdEnvironments.() -> Unit) {
+        environments.add(*environmentsToAdd)
+        environments.block()
+    }
+
+    fun finish(): GocdConfig {
+        pipelines.finish()
+        return this
+    }
+}
+
+@PipelinePicoDslMarker
+class GocdEnvironments {
+    val environments = mutableListOf<GocdEnvironment>()
+
+    fun environment(name: String, block: GocdEnvironment.() -> Unit) {
+        environments.add(GocdEnvironment(name).apply(block))
+    }
+
+    fun add(vararg environmentsToAdd: GocdEnvironment) {
+        environments.addAll(environmentsToAdd)
+    }
+}
+
+@PipelinePicoDslMarker
+class GocdEnvironment(val name: String) {
+    private val environmentVariables = mutableMapOf<String, String>()
+    private val pipelines = mutableListOf<PipelineSingle>()
+
+    fun envVar(key: String, value: String) {
+        environmentVariables[key] = value
+    }
+
+    fun addPipeline(pipelineSingle: PipelineSingle) {
+        pipelines.add(pipelineSingle)
+    }
+}
+
+@PipelinePicoDslMarker
+class GocdPipelines {
     val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
     val pipelines: MutableList<PipelineGroup> = mutableListOf()
-
-    fun environments() {}
 
     fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
         val pipelineSequence = PipelineSequence()
@@ -129,9 +178,10 @@ class GocdConfig {
         return pipelineParallel
     }
 
-    fun finalize(): GocdConfig {
+    fun finish(): GocdPipelines {
         pipelines.forEach {
             it.runGraphProcessors(graph)
+            it.finish()
         }
         validate()
         return this
@@ -148,7 +198,7 @@ class GocdConfig {
     }
 }
 
-fun gocd(init: GocdConfig.() -> Unit) = GocdConfig().apply(init).finalize()
+fun gocd(init: GocdConfig.() -> Unit) = GocdConfig().apply(init).finish()
 
 class PipelineSequence : PipelineGroup() {
     override fun createContext() = SequenceContext(this)
@@ -260,6 +310,7 @@ data class PipelineSingle(val name: String) : PipelineContainer() {
 
     var template: Template? = null
     var group: String? = null
+    var environment: GocdEnvironment? = null
 
     // todo trennung zwischen Builder f. DSL und Objekt
     var stages: MutableList<Stage> = mutableListOf()
@@ -283,8 +334,12 @@ data class PipelineSingle(val name: String) : PipelineContainer() {
         parameters[key] = value
     }
 
-    fun environment(key: String, value: String) {
+    fun envVar(key: String, value: String) {
         environmentVariables[key] = value
+    }
+
+    fun envVar(key: String, value: Any) {
+        environmentVariables[key] = value.toString()
     }
 
     fun stage(name: String, manualApproval: Boolean = false, init: Stage.() -> Unit): Stage {
@@ -301,8 +356,8 @@ data class PipelineSingle(val name: String) : PipelineContainer() {
         return materials
     }
 
-    fun environment(key: String, value: Any) {
-        environmentVariables[key] = value.toString()
+    override fun finish() {
+        environment?.addPipeline(this)
     }
 }
 

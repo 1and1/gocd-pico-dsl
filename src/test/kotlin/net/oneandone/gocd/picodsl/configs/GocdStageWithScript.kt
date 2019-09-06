@@ -3,17 +3,19 @@ package net.oneandone.gocd.picodsl.configs
 import net.oneandone.gocd.picodsl.dsl.gocd
 
 val gocdStageWithScript = gocd {
-    sequence {
-        pipeline("p1") {
-            materials {
-                repoPackage("material1")
-            }
-            stage("QA", true) {
-                job("jobOne") {
-                    script("echo one")
+    pipelines {
+        sequence {
+            pipeline("p1") {
+                materials {
+                    repoPackage("material1")
                 }
-                job("jobTwo") {
-                    script("echo two")
+                stage("QA", true) {
+                    job("jobOne") {
+                        script("echo one")
+                    }
+                    job("jobTwo") {
+                        script("echo two")
+                    }
                 }
             }
         }

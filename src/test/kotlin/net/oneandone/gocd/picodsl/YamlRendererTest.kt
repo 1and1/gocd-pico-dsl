@@ -16,7 +16,7 @@ object YamlRendererTest: Spek({
     describe("empty DSL") {
         val gocd = gocd { }
         describe("generating yaml") {
-            val yaml = gocd.graph.toYaml()
+            val yaml = gocd.pipelines.graph.toYaml()
 
             it("empty YAML is generated") {
                 Assertions.assertThat(yaml).matches("\\{.*}\\s*".toRegex(RegexOption.DOT_MATCHES_ALL).toPattern())
@@ -32,7 +32,7 @@ object YamlRendererTest: Spek({
                 gocdGrouping to "grouping.yaml"
         ).forEach { (gocdConfig, expectedYamlFilename) ->
             describe("generating yaml for $expectedYamlFilename") {
-                val generatedYaml = gocdConfig.graph.toYaml()
+                val generatedYaml = gocdConfig.pipelines.graph.toYaml()
 
                 val generatedFiles = File("target/test-generated-yamls")
                 generatedFiles.mkdirs()
