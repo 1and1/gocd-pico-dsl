@@ -19,6 +19,7 @@ import net.oneandone.gocd.picodsl.dsl.*
 import net.oneandone.gocd.picodsl.renderer.toDot
 import net.oneandone.gocd.picodsl.renderer.toYaml
 import java.io.File
+import java.nio.file.Paths
 
 val prepareDeployment = Template("PREPARE-DEPLOYMENT", "prepare")
 val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
@@ -26,7 +27,7 @@ val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
 val bla = GocdEnvironment("testing")
 
 fun main() {
-    val gocd = gocd {
+    val gocd1 = gocd {
         environments(bla) {
             environment("testing") {
                 envVar("DEPLOYMENT", "testing")
@@ -93,16 +94,30 @@ fun main() {
         }
     }
 
-    gocd.pipelines.graph.edgeSet().forEach { edge ->
+    gocd1.pipelines.graph.edgeSet().forEach { edge ->
         println("$edge")
     }
 
-    File("graph.yml").writeText(gocd.pipelines.graph.toYaml())
-    File("graph.dot").writeText(gocd.pipelines.graph.toDot(plantUmlWrapper = true))
+    File("graph.yml").writeText(gocd1.pipelines.graph.toYaml())
+    File("graph.dot").writeText(gocd1.pipelines.graph.toDot(plantUmlWrapper = true))
+
+    val gocd2 = gocd("second-pipeline") {
+        pipelines {
+            sequence {
+                deploy("first") {
+                    materials {
+                        repoPackage("some-package")
+                    }
+                }
+            }
+        }
+    }
+
+    ConfigSuite(gocd1, gocd2, outputFolder = Paths.get("target/gocd-config")).writeFiles()
 }
 
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
-    pipeline(name) {
+    this.pipeline(name, block).apply {
         template = deployOneStage
-    }.apply(block)
+    }
 }

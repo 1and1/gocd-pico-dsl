@@ -21,6 +21,7 @@ import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.io.DOTExporter
 import java.io.StringWriter
 
+// TODO add stage and environment to graph
 fun Graph<PipelineSingle, DefaultEdge>.toDot(plantUmlWrapper: Boolean = false): String {
     val writer = StringWriter()
     if (plantUmlWrapper) {

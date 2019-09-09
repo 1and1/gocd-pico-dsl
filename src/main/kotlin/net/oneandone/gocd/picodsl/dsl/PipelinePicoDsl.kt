@@ -108,7 +108,10 @@ sealed class PipelineGroup : PipelineContainer() {
 }
 
 @PipelinePicoDslMarker
-class GocdConfig {
+/**
+ * @param name if defined this will be used as the name of the YAML (otherwise name is indexed)
+ */
+class GocdConfig(val name: String? = null) {
     val pipelines = GocdPipelines()
     val environments = GocdEnvironments()
 
@@ -195,10 +198,19 @@ class GocdPipelines {
         pipeLineWithoutStageOrTemplate?.let {
             throw IllegalArgumentException("pipeline ${it.name} has neither template nor stage")
         }
+
+        val pipelineWithoutMaterialAndUpstream = graph.vertexSet().find { pipeline ->
+            (pipeline.materials?.materials?.isEmpty() ?: true) &&
+                    graph.upstreamPipelines(pipeline).isEmpty()
+        }
+
+        pipelineWithoutMaterialAndUpstream?.let {
+            throw IllegalArgumentException("pipeline ${it.name} has neither material nor upstream pipeline")
+        }
     }
 }
 
-fun gocd(init: GocdConfig.() -> Unit) = GocdConfig().apply(init).finish()
+fun gocd(name: String? = null, init: GocdConfig.() -> Unit) = GocdConfig(name).apply(init).finish()
 
 class PipelineSequence : PipelineGroup() {
     override fun createContext() = SequenceContext(this)
@@ -374,4 +386,9 @@ fun pathToPipeline(graph: Graph<PipelineSingle, DefaultEdge>, to: PipelineSingle
     return shortestPath.joinToString(separator = "/") { edge ->
         graph.getEdgeSource(edge).name
     }
+}
+
+fun Graph<PipelineSingle, DefaultEdge>.upstreamPipelines(pipelineSingle: PipelineSingle): List<PipelineSingle> {
+    val incomingEdges = this.incomingEdgesOf(pipelineSingle)
+    return incomingEdges.map { this.getEdgeSource(it) }
 }

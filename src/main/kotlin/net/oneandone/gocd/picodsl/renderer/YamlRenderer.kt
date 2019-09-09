@@ -67,4 +67,3 @@ fun Graph<PipelineSingle, DefaultEdge>.toYaml(): String {
     val config = YamlConfig(listOfPipelines, this)
     return yaml.dump(config)
 }
-

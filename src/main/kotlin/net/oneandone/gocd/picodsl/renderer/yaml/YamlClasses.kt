@@ -3,6 +3,7 @@ package net.oneandone.gocd.picodsl.renderer.yaml
 import net.oneandone.gocd.picodsl.dsl.Job
 import net.oneandone.gocd.picodsl.dsl.PipelineSingle
 import net.oneandone.gocd.picodsl.dsl.Stage
+import net.oneandone.gocd.picodsl.dsl.upstreamPipelines
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 
@@ -48,7 +49,7 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val 
                             "package" to it.name
                     )
                 }.toMap()
-                else -> upstreamPipelines().map {
+                else -> graph.upstreamPipelines(pipelineSingle).map {
                     it.name to mapOf(
                             "pipeline" to it.name,
                             "stage" to it.lastStage
@@ -61,11 +62,6 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val 
         get() {
             return pipelineSingle.stages.map { mapOf(it.name to YamlStage(it)) }
         }
-
-    private fun upstreamPipelines(): List<PipelineSingle> {
-        val incomingEdges = graph.incomingEdgesOf(pipelineSingle)
-        return incomingEdges.map { graph.getEdgeSource(it) }
-    }
 }
 
 class YamlStage(private val stage: Stage) {
