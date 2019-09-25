@@ -1,9 +1,6 @@
 package net.oneandone.gocd.picodsl.renderer.yaml
 
-import net.oneandone.gocd.picodsl.dsl.Job
-import net.oneandone.gocd.picodsl.dsl.PipelineSingle
-import net.oneandone.gocd.picodsl.dsl.Stage
-import net.oneandone.gocd.picodsl.dsl.upstreamPipelines
+import net.oneandone.gocd.picodsl.dsl.*
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 
@@ -20,6 +17,11 @@ data class YamlConfig(private val pipelineList: List<PipelineSingle>, private va
 //    val environments
 //    val format_version
 }
+
+data class YamlEnvironments(private val environments: GocdEnvironments) {
+
+}
+
 
 data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val graph: Graph<PipelineSingle, DefaultEdge>) {
     val template

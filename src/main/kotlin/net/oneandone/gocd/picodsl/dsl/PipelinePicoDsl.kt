@@ -145,8 +145,8 @@ class GocdEnvironments {
 
 @PipelinePicoDslMarker
 class GocdEnvironment(val name: String) {
-    private val environmentVariables = mutableMapOf<String, String>()
-    private val pipelines = mutableListOf<PipelineSingle>()
+    val environmentVariables = mutableMapOf<String, String>()
+    val pipelines = mutableListOf<PipelineSingle>()
 
     fun envVar(key: String, value: String) {
         environmentVariables[key] = value

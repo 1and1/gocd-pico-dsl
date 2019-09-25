@@ -55,15 +55,18 @@ object NonNullRepresenter: Representer() {
 }
 
 fun Graph<PipelineSingle, DefaultEdge>.toYaml(): String {
+    val listOfPipelines = BreadthFirstIterator(this).asSequence().toList()
+    val config = YamlConfig(listOfPipelines, this)
+
+    return config.dumpAsYaml()
+}
+
+fun Any.dumpAsYaml(): String {
     val options = DumperOptions()
     options.isPrettyFlow = true
     options.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
     options.isAllowReadOnlyProperties = true
     options.isCanonical = false
-
     val yaml = Yaml(NonNullRepresenter, options)
-
-    val listOfPipelines = BreadthFirstIterator(this).asSequence().toList()
-    val config = YamlConfig(listOfPipelines, this)
-    return yaml.dump(config)
+    return yaml.dump(this)
 }
