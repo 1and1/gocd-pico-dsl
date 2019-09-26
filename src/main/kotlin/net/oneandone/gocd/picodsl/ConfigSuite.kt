@@ -13,8 +13,8 @@ class ConfigSuite(vararg configs: GocdConfig, private val outputFolder: Path = P
         outputFolder.toFile().mkdirs()
 
         configs.forEachIndexed { index, gocdConfig ->
-            val yamlString = gocdConfig.pipelines.graph.toYaml()
-            File(outputFolder.toFile(), "pipelines-${gocdConfig.name ?: index}.yaml").writeText(yamlString)
+            val yamlString = gocdConfig.toYaml()
+            File(outputFolder.toFile(), "pipelines-${gocdConfig.name ?: index}.gocd.yaml").writeText(yamlString)
         }
     }
 }

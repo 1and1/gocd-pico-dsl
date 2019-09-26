@@ -19,6 +19,7 @@ import org.jgrapht.Graph
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
+import org.jgrapht.traverse.BreadthFirstIterator
 import java.util.*
 
 @DslMarker
@@ -100,6 +101,7 @@ sealed class PipelineGroup : PipelineContainer() {
                 pipeline.apply(processor)
             }
         }
+
         ContextStack.context.removeLast()
         return context
     }
@@ -126,13 +128,30 @@ class GocdConfig(val name: String? = null) {
 
     fun finish(): GocdConfig {
         pipelines.finish()
+
+        // use all environments which are referenced in pipelines
+        pipelines.pipelines().forEach { pipeline ->
+            pipeline.environment?.let {
+                environments.environments.add(it)
+            }
+        }
+
+        validate()
         return this
+    }
+
+    private fun validate() {
+        environments.environments.forEach {
+            require(it.pipelines.isNotEmpty() || environments.environments.size == 1) {
+                "If environment does not list pipelines only one environment is allowed."
+            }
+        }
     }
 }
 
 @PipelinePicoDslMarker
 class GocdEnvironments {
-    val environments = mutableListOf<GocdEnvironment>()
+    val environments = mutableSetOf<GocdEnvironment>()
 
     fun environment(name: String, block: GocdEnvironment.() -> Unit) {
         environments.add(GocdEnvironment(name).apply(block))
@@ -148,8 +167,9 @@ class GocdEnvironment(val name: String) {
     val environmentVariables = mutableMapOf<String, String>()
     val pipelines = mutableListOf<PipelineSingle>()
 
-    fun envVar(key: String, value: String) {
+    fun envVar(key: String, value: String): GocdEnvironment {
         environmentVariables[key] = value
+        return this
     }
 
     fun addPipeline(pipelineSingle: PipelineSingle) {
@@ -161,14 +181,14 @@ class GocdEnvironment(val name: String) {
 class GocdPipelines {
     val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
-    val pipelines: MutableList<PipelineGroup> = mutableListOf()
+    val pipelineGroups: MutableList<PipelineGroup> = mutableListOf()
 
     fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
         val pipelineSequence = PipelineSequence()
         pipelineSequence.init()
         pipelineSequence.addPipelineGroupToGraph(graph)
 
-        pipelines.add(pipelineSequence)
+        pipelineGroups.add(pipelineSequence)
         return pipelineSequence
     }
 
@@ -177,18 +197,20 @@ class GocdPipelines {
         pipelineParallel.init()
         pipelineParallel.addPipelineGroupToGraph(graph)
 
-        pipelines.add(pipelineParallel)
+        pipelineGroups.add(pipelineParallel)
         return pipelineParallel
     }
 
     fun finish(): GocdPipelines {
-        pipelines.forEach {
+        pipelineGroups.forEach {
             it.runGraphProcessors(graph)
             it.finish()
         }
         validate()
         return this
     }
+
+    fun pipelines() = BreadthFirstIterator(graph).asSequence().toList()
 
     private fun validate() {
         val pipeLineWithoutStageOrTemplate = graph.vertexSet().find { pipeline ->
@@ -206,6 +228,14 @@ class GocdPipelines {
 
         pipelineWithoutMaterialAndUpstream?.let {
             throw IllegalArgumentException("pipeline ${it.name} has neither material nor upstream pipeline")
+        }
+
+        val pipelineWithoutGroup = graph.vertexSet().find { pipeline ->
+            pipeline.group == null
+        }
+
+        pipelineWithoutGroup?.let {
+            throw IllegalArgumentException("pipeline ${it.name} has no group")
         }
     }
 }

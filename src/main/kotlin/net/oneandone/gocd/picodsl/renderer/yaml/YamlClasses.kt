@@ -3,23 +3,42 @@ package net.oneandone.gocd.picodsl.renderer.yaml
 import net.oneandone.gocd.picodsl.dsl.*
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
+import org.jgrapht.traverse.BreadthFirstIterator
 
 /**
  * Class represents the YAML structure
  * @see https://github.com/tomzo/gocd-yaml-config-plugin#Format-reference
  * */
 
-data class YamlConfig(private val pipelineList: List<PipelineSingle>, private val graph: Graph<PipelineSingle, DefaultEdge>) {
-    val pipelines
-            get() = pipelineList.map { it.name to YamlPipeline(it, graph) }.toMap()
+data class YamlConfig(private val config: GocdConfig) {
+    val format_version
+        get() = 3
 
-    // Todo
-//    val environments
-//    val format_version
+    val environments: Map<String, YamlEnvironment>
+        get() {
+            return config.environments.environments.map { it.name to YamlEnvironment(it, pipelines(config.pipelines.graph)) }.toMap()
+        }
+
+    val pipelines : Map<String, YamlPipeline>
+        get() {
+            val graph = config.pipelines.graph
+            val pipelineList = pipelines(graph)
+            return pipelineList.map { it.name to YamlPipeline(it, graph) }.toMap()
+        }
+
+    private fun pipelines(graph: Graph<PipelineSingle, DefaultEdge>) =
+            BreadthFirstIterator(graph).asSequence().toList()
 }
 
-data class YamlEnvironments(private val environments: GocdEnvironments) {
+data class YamlEnvironment(private val environment: GocdEnvironment, private val configPipelines: List<PipelineSingle>) {
+    val environment_variables
+        get() = environment.environmentVariables
 
+    val pipelines: List<String>
+        get() {
+            val pipelinesToRender = if (environment.pipelines.isNotEmpty()) environment.pipelines else configPipelines
+            return pipelinesToRender.map { it.name }
+        }
 }
 
 
@@ -30,7 +49,7 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val 
     val lock_behavior
         get() = pipelineSingle.lockBehavior
 
-    val label_template : String
+    val label_template: String
         get() {
             val materials = materials.entries
             return "${'$'}{${materials.first().key}}"
@@ -43,7 +62,7 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val 
     val environment_variables
         get() = pipelineSingle.environmentVariables
 
-    val materials : Map<String, Map<String, String>>
+    val materials: Map<String, Map<String, String>>
         get() {
             return when {
                 pipelineSingle.materials?.materials?.isNotEmpty() == true -> pipelineSingle.materials!!.materials.map {
@@ -68,7 +87,7 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val 
 
 class YamlStage(private val stage: Stage) {
     val approval
-        get() = if(stage.manualApproval) "manual" else null
+        get() = if (stage.manualApproval) "manual" else null
 
     val jobs
         get() = stage.jobs.map { it.name to YamlJob(it) }.toMap()

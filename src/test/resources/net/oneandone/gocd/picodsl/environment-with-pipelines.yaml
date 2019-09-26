@@ -1,5 +1,13 @@
 format_version: 3
 
+environments:
+  dev:
+    environment_variables:
+      envKey: envValue
+    pipelines:
+      - p1
+      - p2
+
 pipelines:
   p1:
     label_template: ${material1}

@@ -1,0 +1,9 @@
+format_version: 3
+
+environments:
+  testing:
+    environment_variables:
+      DEPLOYMENT: testing
+    pipelines:
+      - one
+      - two

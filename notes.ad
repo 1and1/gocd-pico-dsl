@@ -1,0 +1,59 @@
+= Notes
+
+== Problems
+
+[source,yaml]
+----
+environments:
+  building:
+    environment_variables:
+      DEPLOYMENT: build
+    pipelines:
+      - prepare
+      - migration
+  testing:
+    environment_variables:
+      DEPLOYMENT: bla
+    pipelines:
+      - three
+      - four
+----
+
+----
+There was an error parsing this configuration repository:
+INVALID MERGED CONFIGURATION
+Number of errors: 1+
+1. Environment variable 'DEPLOYMENT' is defined more than once with different values;;
+----
+
+Apart from that can environments occur in many `*.gocd.yaml`. If same environment is defined twice pipelines and environment_variables are merged.
+
+.a.gocd.yaml
+[source,yaml]
+----
+environments:
+  testing:
+    pipelines:
+      - two
+      - three
+      - four
+----
+
+.b.gocd.yaml
+[source,yaml]
+----
+environments:
+  testing:
+    pipelines:
+      - one
+      - two
+----
+
+----
+There was an error parsing this configuration repository:
+INVALID MERGED CONFIGURATION
+Number of errors: 1+
+1. Environment pipeline 'two' is defined more than once.;;
+----
+
+Pipeline must not occur in two gocd files. Even if it's the same environment and not conflicting.

@@ -15,15 +15,12 @@
  */
 package net.oneandone.gocd.picodsl.renderer
 
-import net.oneandone.gocd.picodsl.dsl.PipelineSingle
+import net.oneandone.gocd.picodsl.dsl.GocdConfig
 import net.oneandone.gocd.picodsl.dsl.Script
 import net.oneandone.gocd.picodsl.renderer.yaml.YamlConfig
 import net.oneandone.gocd.picodsl.renderer.yaml.YamlJob
 import net.oneandone.gocd.picodsl.renderer.yaml.YamlPipeline
 import net.oneandone.gocd.picodsl.renderer.yaml.YamlStage
-import org.jgrapht.Graph
-import org.jgrapht.graph.DefaultEdge
-import org.jgrapht.traverse.BreadthFirstIterator
 import org.yaml.snakeyaml.DumperOptions
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.introspector.Property
@@ -54,12 +51,7 @@ object NonNullRepresenter: Representer() {
     }
 }
 
-fun Graph<PipelineSingle, DefaultEdge>.toYaml(): String {
-    val listOfPipelines = BreadthFirstIterator(this).asSequence().toList()
-    val config = YamlConfig(listOfPipelines, this)
-
-    return config.dumpAsYaml()
-}
+fun GocdConfig.toYaml() = YamlConfig(this).dumpAsYaml()
 
 fun Any.dumpAsYaml(): String {
     val options = DumperOptions()

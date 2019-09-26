@@ -1,3 +1,5 @@
+format_version: 3
+
 pipelines:
   p1:
     label_template: ${material1}

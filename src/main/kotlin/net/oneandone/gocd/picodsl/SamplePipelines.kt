@@ -21,53 +21,51 @@ import net.oneandone.gocd.picodsl.renderer.toYaml
 import java.io.File
 import java.nio.file.Paths
 
-val prepareDeployment = Template("PREPARE-DEPLOYMENT", "prepare")
-val deployOneStage = Template("DEPLOY-ONE-STAGE", "PREPARE-DEPLOY-VERIFY-TEST")
+val testing = Template("testing", "testing-stage")
+val deploy = Template("deploy", "deploy-stage")
 
-val bla = GocdEnvironment("testing")
+val prepareEnvironment = GocdEnvironment("prepareEnv").envVar("envKey", "envPrepare")
+val testingEnvironment = GocdEnvironment("testingEnv").envVar("envKey", "envTesting")
 
 fun main() {
     val gocd1 = gocd {
-        environments(bla) {
-            environment("testing") {
-                envVar("DEPLOYMENT", "testing")
-            }
-        }
-
         pipelines {
             sequence {
                 group("dev") {
                     forAll {
-                        environment = bla
+                        if (environment == null) {
+                            environment = testingEnvironment
+                        }
                     }
 
                     pipeline("prepare") {
-                        template = prepareDeployment
+                        template = testing
                         group = "init"
-                        parameter("a", "b")
+                        environment = prepareEnvironment
+                        parameter("param1", "value1")
                         materials {
-                            repoPackage("staging-package")
+                            repoPackage("broker")
                         }
                     }
                     pipeline("migration") {
-                        template = deployOneStage
+                        template = deploy
                     }
                     parallel {
-                        pipeline("crms") {
-                            template = deployOneStage
+                        pipeline("one") {
+                            template = deploy
                         }
                         sequence {
-                            pipeline("keyservice") {
-                                template = deployOneStage
+                            pipeline("two") {
+                                template = deploy
                             }
                             parallel {
-                                pipeline("ni") {
-                                    template = deployOneStage
+                                pipeline("three") {
+                                    template = deploy
                                 }
-                                pipeline("trinity") {
-                                    template = deployOneStage
+                                pipeline("four") {
+                                    template = deploy
                                 }
-                                deploy("ni") {
+                                deploy("five") {
                                     template = Template("foo", "sdklfj")
                                 }
                             }
@@ -87,7 +85,9 @@ fun main() {
                 }
                 group("qa") {
                     pipeline("prepare-qa") {
-                        template = prepareDeployment
+                        template = testing
+                        // todo bind parameter to template
+                        parameter("param1", "value2")
                     }
                 }
             }
@@ -98,15 +98,19 @@ fun main() {
         println("$edge")
     }
 
-    File("graph.yml").writeText(gocd1.pipelines.graph.toYaml())
+    File("graph.yml").writeText(gocd1.toYaml())
     File("graph.dot").writeText(gocd1.pipelines.graph.toDot(plantUmlWrapper = true))
 
     val gocd2 = gocd("second-pipeline") {
+        environments() {
+            environment("devEnv") {}
+        }
         pipelines {
             sequence {
                 deploy("first") {
+                    group = "dev"
                     materials {
-                        repoPackage("some-package")
+                        repoPackage("euss")
                     }
                 }
             }
@@ -118,6 +122,6 @@ fun main() {
 
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
     this.pipeline(name, block).apply {
-        template = deployOneStage
+        template = deploy
     }
 }
