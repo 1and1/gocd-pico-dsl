@@ -1,0 +1,70 @@
+= GoCD Pipeline Code DSL in Kotlin
+
+Generate GoCD pipelines for
+link:https://github.com/tomzo/gocd-yaml-config-plugin[tomzo/gocd-yaml-config-plugin: Plugin to declare GoCD pipelines and environments configuration in YAML] in Kotlin DSL.
+
+== Usage
+
+=== Setup kotlin project with GoCD DSL as dependency
+
+[source,xml]
+.pom.xml
+----
+<build>
+    <sourceDirectory>src/main/kotlin</sourceDirectory>
+    <testSourceDirectory>src/test/kotlin</testSourceDirectory>
+    <plugins>
+        <plugin>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-maven-plugin</artifactId>
+        </plugin>
+    </plugins>
+</build>
+<dependencies>
+    <groupId>net.oneandone.gocd</groupId>
+    <artifactId>gocd-pico-dsl</artifactId>
+    <version>1.0</version>
+</dependencies>
+----
+
+
+
+=== Define DSL
+
+Define your pipelines with DSL. Call in a main function `ConfigSuite(gocd, outputFolder = Paths.get(outputFolder)).writeFiles()` to start generation.
+
+.net.oneandone.gocd.picodsl.samples.MinimalExampleKt
+[source,java]
+----
+fun main(args: Array<String>) {
+    val gocd = gocd {
+        pipelines {
+            sequence {
+                group("dev") {
+                    pipeline("deploy") {
+                        materials {
+                            repoPackage("myArtifact")
+                        }
+                        template = Template("deploy", "last-stage")
+                    }
+                }
+            }
+        }
+    }
+
+    val outputFolder = if (args.isNotEmpty()) args[0] else "target/gocd-config"
+    ConfigSuite(gocd, outputFolder = Paths.get(outputFolder)).writeFiles()
+}
+----
+
+Here you can find a link:src/test/kotlin/net/oneandone/gocd/picodsl/samples/FullExample.kt[FullExample.kt]
+
+=== Generate DSL
+
+Call the main function above via maven:
+
+[source,bash]
+----
+mvn compile exec:java -Dexec.mainClass="net.oneandone.gocd.picodsl.samples.MinimalExampleKt" -Dexec.args="target/gocd-config"
+----
+

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.oneandone.gocd.picodsl
+package net.oneandone.gocd.picodsl.samples
 
+import net.oneandone.gocd.picodsl.ConfigSuite
 import net.oneandone.gocd.picodsl.dsl.*
 import net.oneandone.gocd.picodsl.renderer.toDot
 import net.oneandone.gocd.picodsl.renderer.toYaml
@@ -27,7 +28,7 @@ val deploy = Template("deploy", "deploy-stage")
 val prepareEnvironment = GocdEnvironment("prepareEnv").envVar("envKey", "envPrepare")
 val testingEnvironment = GocdEnvironment("testingEnv").envVar("envKey", "envTesting")
 
-fun main() {
+fun main(args: Array<String>) {
     val gocd1 = gocd {
         pipelines {
             sequence {
@@ -75,9 +76,8 @@ fun main() {
                         stage("APPROVE", manualApproval = true) {
                             job("approve") {
                                 script("""
-                        echo "whatever"
-                        do something
-                        ${'$'}{ARTIFACT_GROUPID}:${'$'}{ARTIFACT_ID}:${'$'}{GO_PIPELINE_LABEL}
+                        echo "executing a script"
+                        echo "print envKey: '${'$'}{envKey}'"
                     """.trimIndent())
                             }
                         }
@@ -88,6 +88,7 @@ fun main() {
                         template = testing
                         // todo bind parameter to template
                         parameter("param1", "value2")
+                        environment = prepareEnvironment
                     }
                 }
             }
@@ -117,7 +118,8 @@ fun main() {
         }
     }
 
-    ConfigSuite(gocd1, gocd2, outputFolder = Paths.get("target/gocd-config")).writeFiles()
+    val outputFolder = if (args.isNotEmpty()) args[0] else "target/gocd-config"
+    ConfigSuite(gocd1, gocd2, outputFolder = Paths.get(outputFolder)).writeFiles()
 }
 
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
