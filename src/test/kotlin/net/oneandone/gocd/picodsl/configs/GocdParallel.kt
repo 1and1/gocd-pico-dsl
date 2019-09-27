@@ -21,17 +21,18 @@ val gocdParallel = gocd {
     pipelines {
         sequence {
             startingPipelineWithMaterial()
-
-            parallel {
-                pipeline("para1") {
+            group("dev") {
+                parallel {
+                    pipeline("para1") {
+                        template = template1
+                    }
+                    pipeline("para2") {
+                        template = template2
+                    }
+                }
+                pipeline("p2") {
                     template = template1
                 }
-                pipeline("para2") {
-                    template = template2
-                }
-            }
-            pipeline("p2") {
-                template = template1
             }
         }
     }

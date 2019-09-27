@@ -2,6 +2,7 @@ format_version: 3
 
 pipelines:
   p1:
+    group: dev
     label_template: ${material1}
     lock_behavior: unlockWhenFinished
     materials:

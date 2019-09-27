@@ -25,6 +25,7 @@ val template2 = Template("template2", "stage2")
 /** Every config must start with a pipeline which has an material */
 fun PipelineSequence.startingPipelineWithMaterial(): PipelineSingle {
     return pipeline("p1") {
+        group = "dev"
         materials {
             repoPackage("material1")
         }

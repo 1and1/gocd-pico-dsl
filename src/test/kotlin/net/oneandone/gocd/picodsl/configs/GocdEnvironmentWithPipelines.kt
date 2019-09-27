@@ -27,6 +27,7 @@ val environmentWithPipelines = gocd {
         sequence {
             startingPipelineWithMaterial()
             pipeline("p2") {
+                group = "dev"
                 template = template2
             }
         }

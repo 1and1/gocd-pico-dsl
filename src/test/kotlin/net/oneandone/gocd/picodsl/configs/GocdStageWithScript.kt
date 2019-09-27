@@ -21,6 +21,7 @@ val gocdStageWithScript = gocd {
     pipelines {
         sequence {
             pipeline("p1") {
+                group = "dev"
                 materials {
                     repoPackage("material1")
                 }
