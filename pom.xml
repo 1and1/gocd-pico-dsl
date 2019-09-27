@@ -16,6 +16,35 @@
 
     <packaging>jar</packaging>
 
+    <url>https://github.com/1and1/gocd-pico-dsl</url>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/1and1/gocd-pico-dsl/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>Travis</system>
+        <url>TBD</url>
+    </ciManagement>
+    <developers>
+        <developer>
+            <id>masooh</id>
+            <name>Martin Hofmann-Sobik</name>
+            <organization>1 &amp; 1 Internet AG</organization>
+            <url>https://github.com/masooh</url>
+            <timezone>+1</timezone>
+        </developer>
+    </developers>
+
+    <inceptionYear>2019</inceptionYear>
+
+    <scm>
+        <connection>scm:git:git://github.com/1and1/gocd-pico-dsl.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/1and1/gocd-pico-dsl.git</developerConnection>
+        <url>https://github.com/1and1/gocd-pico-dsl/</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
         <kotlin.version>1.3.41</kotlin.version>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
