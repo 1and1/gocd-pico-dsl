@@ -25,7 +25,9 @@ class ConfigSuite(vararg configs: GocdConfig, private val outputFolder: Path = P
     private val configs: List<GocdConfig> = configs.toList()
 
     fun writeFiles() {
-        outputFolder.toFile().mkdirs()
+        if (!outputFolder.toFile().mkdirs()) {
+            throw IllegalStateException("output folder could not be created: ${outputFolder}")
+        }
 
         configs.forEachIndexed { index, gocdConfig ->
             val yamlString = gocdConfig.toYaml()
