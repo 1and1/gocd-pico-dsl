@@ -333,6 +333,9 @@ data class PipelineSingle(val name: String) : PipelineContainer() {
         definitionException.stackTrace = filtered.toTypedArray()
     }
 
+    /**
+     *  Tag is not represented in yaml config.
+     **/
     fun tag(key: String, value: String) {
         tags[key] = value
     }
@@ -403,10 +406,9 @@ data class PipelineSingle(val name: String) : PipelineContainer() {
     }
 }
 
-fun pathToPipeline(graph: Graph<PipelineSingle, DefaultEdge>, to: PipelineSingle, matcher: (PipelineSingle) -> Boolean): String {
-
-    val candidates = graph.vertexSet().filter(matcher)
-    val dijkstraAlg = DijkstraShortestPath(graph)
+fun Graph<PipelineSingle, DefaultEdge>.pathToPipeline(to: PipelineSingle, fromMatcher: (PipelineSingle) -> Boolean): String {
+    val candidates = this.vertexSet().filter(fromMatcher)
+    val dijkstraAlg = DijkstraShortestPath(this)
 
     val shortestPath = candidates.map { candidate ->
         val startPath = dijkstraAlg.getPaths(candidate)
@@ -414,7 +416,7 @@ fun pathToPipeline(graph: Graph<PipelineSingle, DefaultEdge>, to: PipelineSingle
     }.minBy { it.size } ?: throw IllegalArgumentException("no path found to $to", to.definitionException)
 
     return shortestPath.joinToString(separator = "/") { edge ->
-        graph.getEdgeSource(edge).name
+        this.getEdgeSource(edge).name
     }
 }
 

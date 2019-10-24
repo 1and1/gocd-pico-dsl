@@ -8,7 +8,7 @@ pipelines:
       material1:
         package: material1
     template: template1
-  p2:
+  p2-a:
     group: dev
     label_template: ${p1}
     lock_behavior: unlockWhenFinished
@@ -17,21 +17,35 @@ pipelines:
         pipeline: p1
         stage: stage1
     template: template2
-  qa-A:
-    group: qa
-    label_template: ${p2}
+  p2-b:
+    group: dev
+    label_template: ${p1}
     lock_behavior: unlockWhenFinished
     materials:
-      p2:
-        pipeline: p2
-        stage: stage2
-    template: template1
-  qa-B:
-    group: qa
-    label_template: ${p2}
+      p1:
+        pipeline: p1
+        stage: stage1
+    template: template2
+  p3:
+    group: dev
+    label_template: ${p2-a}
     lock_behavior: unlockWhenFinished
     materials:
-      p2:
-        pipeline: p2
+      p2-a:
+        pipeline: p2-a
         stage: stage2
+      p2-b:
+        pipeline: p2-b
+        stage: stage2
+    template: template2
+  p4:
+    group: dev
+    label_template: ${p3}
+    lock_behavior: unlockWhenFinished
+    materials:
+      p3:
+        pipeline: p3
+        stage: stage2
+    parameters:
+      upstream: p1/p2-a/p3
     template: template2

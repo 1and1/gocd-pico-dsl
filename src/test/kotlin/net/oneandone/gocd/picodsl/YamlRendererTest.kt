@@ -28,10 +28,13 @@ object YamlRendererTest: Spek({
         mapOf(
                 gocd {  } to "no-pipeline.yaml",
                 gocdTwoPipelines to "two-pipelines.yaml",
-                environmentWithPipelines to "environment-with-pipelines.yaml",
+                singleEnvironmentWithPipelines to "single-environment-with-pipelines.yaml",
+                multipleEnvironmentWithPipelines to "multiple-environments-with-pipelines.yaml",
                 gocdStageWithScript to "stage-with-script.yaml",
                 gocdParallel to "parallel.yaml",
-                gocdGrouping to "grouping.yaml"
+                gocdStartParallel to "start-parallel.yaml",
+                gocdGrouping to "grouping.yaml",
+                gocdPathToPipeline to "path-to-pipeline.yaml"
         ).forEach { (gocdConfig, expectedYamlFilename) ->
             describe("generating yaml for $expectedYamlFilename") {
                 val generatedYaml = gocdConfig.toYaml()

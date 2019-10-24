@@ -16,31 +16,36 @@
 package net.oneandone.gocd.picodsl.configs
 
 import net.oneandone.gocd.picodsl.dsl.gocd
+import net.oneandone.gocd.picodsl.dsl.pathToPipeline
 
-val gocdGrouping = gocd {
+val gocdPathToPipeline = gocd {
     pipelines {
         sequence {
             group("dev") {
                 pipeline("p1") {
+                    tag("artifact", "p1-artifact")
                     materials {
                         repoPackage("material1")
                     }
                     template = template1
                 }
-
-                pipeline("p2") {
+                parallel {
+                    pipeline("p2-a") {
+                        template = template2
+                    }
+                    pipeline("p2-b") {
+                        template = template2
+                    }
+                }
+                pipeline("p3") {
                     template = template2
                 }
-            }
-
-            parallel {
-                group("qa") {
-                    pipeline("qa-A") {
-                        template = template1
-                    }
-
-                    pipeline("qa-B") {
-                        template = template2
+                pipeline("p4") {
+                    template = template2
+                    graphProcessors.add {
+                        parameter("upstream", it.pathToPipeline(this) { pipeline ->
+                            pipeline.tags["artifact"] == "p1-artifact"
+                        })
                     }
                 }
             }

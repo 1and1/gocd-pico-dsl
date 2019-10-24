@@ -17,29 +17,25 @@ package net.oneandone.gocd.picodsl.configs
 
 import net.oneandone.gocd.picodsl.dsl.gocd
 
-val gocdGrouping = gocd {
+val gocdStartParallel = gocd {
     pipelines {
-        sequence {
+        parallel {
             group("dev") {
-                pipeline("p1") {
+                pipeline("A") {
+                    template = template1
                     materials {
                         repoPackage("material1")
                     }
-                    template = template1
-                }
 
-                pipeline("p2") {
-                    template = template2
                 }
-            }
-
-            parallel {
-                group("qa") {
-                    pipeline("qa-A") {
-                        template = template1
+                sequence {
+                    pipeline("B1") {
+                        template = template2
+                        materials {
+                            repoPackage("material2")
+                        }
                     }
-
-                    pipeline("qa-B") {
+                    pipeline("B2") {
                         template = template2
                     }
                 }

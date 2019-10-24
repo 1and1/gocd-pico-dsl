@@ -1,4 +1,4 @@
-= GoCD Pipeline Code DSL in Kotlin
++= GoCD Pipeline Code DSL in Kotlin
 
 Generate GoCD pipelines for
 link:https://github.com/tomzo/gocd-yaml-config-plugin[tomzo/gocd-yaml-config-plugin: Plugin to declare GoCD pipelines and environments configuration in YAML] in Kotlin DSL.
