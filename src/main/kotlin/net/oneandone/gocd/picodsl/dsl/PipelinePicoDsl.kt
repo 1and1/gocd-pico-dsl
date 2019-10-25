@@ -327,6 +327,8 @@ class PipelineSingle(val name: String) : PipelineContainer() {
     val definitionException = IllegalArgumentException(name)
 
     init {
+        require(name.isNotBlank()) { "pipeline must be named"}
+
         definitionException.fillInStackTrace()
         val filtered = definitionException.stackTrace.filter { !it.className.startsWith("net.oneandone.gocd.picodsl.dsl") }
 
@@ -340,25 +342,24 @@ class PipelineSingle(val name: String) : PipelineContainer() {
         tags[key] = value
     }
 
-    var lockBehavior: LockBehavior = LockBehavior.unlockWhenFinished
+    var lockBehavior = LockBehavior.unlockWhenFinished
 
     val lastStage: String
-        get() {
-            require(template != null || stages.size > 0) {
+        get() =
+            requireNotNull(template?.lastStage ?: stages.last().name) {
                 "Pipeline has neither template nor stages"
             }
-            return template?.stage ?: stages.last().name
-        }
 
-    var parameters = mutableMapOf<String, String>()
-    var environmentVariables = mutableMapOf<String, String>()
+
+    val parameters = mutableMapOf<String, String>()
+    val environmentVariables = mutableMapOf<String, String>()
 
     var template: Template? = null
     var group: String? = null
     var environment: GocdEnvironment? = null
 
     // todo trennung zwischen Builder f. DSL und Objekt
-    var stages: MutableList<Stage> = mutableListOf()
+    val stages: MutableList<Stage> = mutableListOf()
     var materials: Materials? = null
 
     override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {

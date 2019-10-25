@@ -15,6 +15,7 @@
  */
 package net.oneandone.gocd.picodsl.configs
 
+import net.oneandone.gocd.picodsl.dsl.LockBehavior
 import net.oneandone.gocd.picodsl.dsl.gocd
 
 val gocdTwoPipelines = gocd {
@@ -29,6 +30,7 @@ val gocdTwoPipelines = gocd {
                 }
                 pipeline("p2") {
                     template = template2
+                    lockBehavior = LockBehavior.none
                 }
             }
         }

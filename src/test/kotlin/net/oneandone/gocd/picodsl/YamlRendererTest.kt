@@ -43,7 +43,6 @@ object YamlRendererTest: Spek({
                 generatedFiles.mkdirs()
                 File(generatedFiles, expectedYamlFilename).writeText(generatedYaml)
 
-                println(expectedYamlFilename)
                 val expectedYaml = YamlRendererTest::class.java.getResource(expectedYamlFilename).readText()
 
                 it("matches $expectedYamlFilename") {

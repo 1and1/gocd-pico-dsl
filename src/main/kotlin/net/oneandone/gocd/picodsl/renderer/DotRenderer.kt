@@ -15,14 +15,15 @@
  */
 package net.oneandone.gocd.picodsl.renderer
 
+import net.oneandone.gocd.picodsl.dsl.GocdConfig
 import net.oneandone.gocd.picodsl.dsl.PipelineSingle
-import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.io.DOTExporter
 import java.io.StringWriter
 
-// TODO add stage and environment to graph
-fun Graph<PipelineSingle, DefaultEdge>.toDot(plantUmlWrapper: Boolean = false): String {
+fun GocdConfig.toDot(plantUmlWrapper: Boolean = false): String {
+    val graph = this.pipelines.graph
+
     val writer = StringWriter()
     if (plantUmlWrapper) {
         writer.appendln("@startuml")
@@ -33,7 +34,7 @@ fun Graph<PipelineSingle, DefaultEdge>.toDot(plantUmlWrapper: Boolean = false): 
             { "" }
     )
     dotExporter.putGraphAttribute("rankdir", "LR")
-    dotExporter.exportGraph(this, writer)
+    dotExporter.exportGraph(graph, writer)
     if (plantUmlWrapper) {
         writer.appendln("@enduml")
     }

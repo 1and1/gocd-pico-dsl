@@ -20,7 +20,6 @@ import net.oneandone.gocd.picodsl.dsl.*
 import net.oneandone.gocd.picodsl.renderer.toDot
 import net.oneandone.gocd.picodsl.renderer.toYaml
 import java.io.File
-import java.nio.file.Paths
 
 val testing = Template("testing", "testing-stage")
 val deploy = Template("deploy", "deploy-stage")
@@ -100,7 +99,7 @@ fun main(args: Array<String>) {
     }
 
     File("graph.yml").writeText(gocd1.toYaml())
-    File("graph.dot").writeText(gocd1.pipelines.graph.toDot(plantUmlWrapper = true))
+    File("graph.dot").writeText(gocd1.toDot(plantUmlWrapper = true))
 
     val gocd2 = gocd("second-pipeline") {
         environments() {
@@ -119,7 +118,7 @@ fun main(args: Array<String>) {
     }
 
     val outputFolder = if (args.isNotEmpty()) args[0] else "target/gocd-config"
-    ConfigSuite(gocd1, gocd2, outputFolder = Paths.get(outputFolder)).writeFiles()
+    ConfigSuite(gocd1, gocd2, outputFolder = File(outputFolder)).writeYamlFiles()
 }
 
 private fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {

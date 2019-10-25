@@ -15,10 +15,9 @@
  */
 package net.oneandone.gocd.picodsl
 
-import net.oneandone.gocd.picodsl.dsl.Materials
-import net.oneandone.gocd.picodsl.dsl.PipelineSingle
-import net.oneandone.gocd.picodsl.dsl.Template
-import net.oneandone.gocd.picodsl.dsl.gocd
+import net.oneandone.gocd.picodsl.configs.template1
+import net.oneandone.gocd.picodsl.configs.template2
+import net.oneandone.gocd.picodsl.dsl.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import kotlin.test.assertFailsWith
@@ -45,8 +44,8 @@ object ValidationTest : Spek({
         }
     }
 
-    describe("Config with multiple environments and unassociated pipelines") {
-        it("fails") {
+    describe("misc failures") {
+        it("Config with multiple environments and unassociated pipelines") {
             assertFailsWith(IllegalArgumentException::class) {
                 gocd {
                     environments {
@@ -61,7 +60,34 @@ object ValidationTest : Spek({
                 }
             }
         }
+        it("fails if no starting pipeline is found for pathToPipeline") {
+            assertFailsWith(IllegalArgumentException::class) {
+                gocd {
+                    pipelines {
+                        sequence {
+                            group("dev") {
+                                pipeline("p1") {
+                                    materials {
+                                        repoPackage("material1")
+                                    }
+                                    template = template1
+                                }
+                                pipeline("p4") {
+                                    template = template2
+                                    graphProcessors.add {
+                                        parameter("upstream", it.pathToPipeline(this) { pipeline ->
+                                            pipeline.name == "does not exist"
+                                        })
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
+
 })
 
 private fun createPipeline(
@@ -70,7 +96,7 @@ private fun createPipeline(
         materials: Materials? = Materials().apply {
             repoPackage("repo")
         }) = PipelineSingle("p1").apply {
-            this.template = template
-            this.group = group
-            this.materials = materials
-        }
+    this.template = template
+    this.group = group
+    this.materials = materials
+}

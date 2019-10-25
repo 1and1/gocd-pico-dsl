@@ -18,7 +18,7 @@ package net.oneandone.gocd.picodsl.samples
 import net.oneandone.gocd.picodsl.ConfigSuite
 import net.oneandone.gocd.picodsl.dsl.Template
 import net.oneandone.gocd.picodsl.dsl.gocd
-import java.nio.file.Paths
+import java.io.File
 
 fun main(args: Array<String>) {
     val gocd = gocd {
@@ -37,5 +37,5 @@ fun main(args: Array<String>) {
     }
 
     val outputFolder = if (args.isNotEmpty()) args[0] else "target/gocd-config"
-    ConfigSuite(gocd, outputFolder = Paths.get(outputFolder)).writeFiles()
+    ConfigSuite(gocd, outputFolder = File(outputFolder)).writeYamlFiles()
 }

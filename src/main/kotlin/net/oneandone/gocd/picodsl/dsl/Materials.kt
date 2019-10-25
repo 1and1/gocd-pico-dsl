@@ -20,10 +20,15 @@ package net.oneandone.gocd.picodsl.dsl
  */
 
 sealed class Material(val name: String)
-class Package(name: String) : Material(name)
+
+class Package(name: String) : Material(name) {
+    init {
+        require(name.isNotBlank()) { "package must be named"}
+    }
+}
 
 class Materials {
-    var materials = mutableListOf<Material>()
+    val materials = mutableListOf<Material>()
 
     /** package is a keyword, method therefore renamed to repoPackage */
     fun repoPackage(name: String) {

@@ -1,5 +1,4 @@
 format_version: 3
-
 pipelines:
   p1:
     group: dev
@@ -9,7 +8,7 @@ pipelines:
       material1:
         package: material1
     stages:
-      - QA:
+      - DEV:
           approval: manual
           jobs:
             jobOne:
@@ -18,3 +17,12 @@ pipelines:
             jobTwo:
               tasks:
                 - script: echo two
+  p2:
+    group: qa
+    label_template: ${p1}
+    lock_behavior: unlockWhenFinished
+    materials:
+      p1:
+        pipeline: p1
+        stage: DEV
+    template: t1

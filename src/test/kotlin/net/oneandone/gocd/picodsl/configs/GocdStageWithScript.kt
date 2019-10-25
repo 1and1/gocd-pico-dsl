@@ -15,6 +15,7 @@
  */
 package net.oneandone.gocd.picodsl.configs
 
+import net.oneandone.gocd.picodsl.dsl.Template
 import net.oneandone.gocd.picodsl.dsl.gocd
 
 val gocdStageWithScript = gocd {
@@ -25,7 +26,7 @@ val gocdStageWithScript = gocd {
                 materials {
                     repoPackage("material1")
                 }
-                stage("QA", true) {
+                stage("DEV", true) {
                     job("jobOne") {
                         script("echo one")
                     }
@@ -33,6 +34,11 @@ val gocdStageWithScript = gocd {
                         script("echo two")
                     }
                 }
+            }
+
+            pipeline("p2") {
+                group = "qa"
+                template = Template("t1", "stage")
             }
         }
     }

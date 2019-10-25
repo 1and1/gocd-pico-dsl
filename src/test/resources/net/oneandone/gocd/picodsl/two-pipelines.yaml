@@ -12,7 +12,7 @@ pipelines:
   p2:
     group: dev
     label_template: ${p1}
-    lock_behavior: unlockWhenFinished
+    lock_behavior: none
     materials:
       p1:
         pipeline: p1
