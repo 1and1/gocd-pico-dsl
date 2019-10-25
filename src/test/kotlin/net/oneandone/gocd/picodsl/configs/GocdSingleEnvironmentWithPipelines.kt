@@ -15,27 +15,33 @@
  */
 package net.oneandone.gocd.picodsl.configs
 
-import net.oneandone.gocd.picodsl.dsl.GocdEnvironment
 import net.oneandone.gocd.picodsl.dsl.gocd
 
-val devEnv =  GocdEnvironment("dev").envVar("envKey", "envValue")
-
-val multipleEnvironmentWithPipelines = gocd {
+val singleEnvironmentWithPipelines = gocd {
     environments {
-        add(devEnv)
-        environment("qa") {
-            envVar("envKeyQa", "envValueQa")
+        environment("dev") {
+            envVar("envKey", "envValue")
         }
     }
     pipelines {
         sequence {
-            startingPipelineWithMaterial()
-            pipeline("p2") {
-                environment = devEnv
-                group = "dev"
-                template = template2
-                envVar("envPipelineKey", "envPipelineValue")
-                envVar("envPipelineInteger", 42)
+            group("dev") {
+                forAll {
+                    envVar("commonEnvVar", "commonEnvValue")
+                }
+
+                pipeline("p1") {
+                    group = "dev"
+                    materials {
+                        repoPackage("material1")
+                    }
+                    template = template1
+                }
+                pipeline("p2") {
+                    template = template2
+                    envVar("envPipelineKey", "envPipelineValue")
+                    envVar("envPipelineInteger", 42)
+                }
             }
         }
     }

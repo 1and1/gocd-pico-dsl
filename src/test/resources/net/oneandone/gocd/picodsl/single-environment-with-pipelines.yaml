@@ -8,6 +8,8 @@ environments:
 format_version: 3
 pipelines:
   p1:
+    environment_variables:
+      commonEnvVar: commonEnvValue
     group: dev
     label_template: ${material1}
     lock_behavior: unlockWhenFinished
@@ -19,6 +21,7 @@ pipelines:
     environment_variables:
       envPipelineKey: envPipelineValue
       envPipelineInteger: '42'
+      commonEnvVar: commonEnvValue
     group: dev
     label_template: ${p1}
     lock_behavior: unlockWhenFinished

@@ -4,22 +4,26 @@ environments:
       envKey: envValue
     pipelines:
       - p1
+  qa:
+    environment_variables:
+      envKeyQa: envValueQa
+    pipelines:
       - p2
 format_version: 3
 pipelines:
   p1:
     group: dev
-    label_template: ${material1}
+    label_template: ${package}
     lock_behavior: unlockWhenFinished
     materials:
-      material1:
-        package: material1
+      package:
+        package: package
     template: template1
   p2:
     environment_variables:
       envPipelineKey: envPipelineValue
       envPipelineInteger: '42'
-    group: dev
+    group: qa
     label_template: ${p1}
     lock_behavior: unlockWhenFinished
     materials:

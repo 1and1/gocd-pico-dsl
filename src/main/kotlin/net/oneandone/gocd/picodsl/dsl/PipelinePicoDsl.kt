@@ -322,7 +322,7 @@ class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGrou
     }
 }
 
-data class PipelineSingle(val name: String) : PipelineContainer() {
+class PipelineSingle(val name: String) : PipelineContainer() {
     val tags = mutableMapOf<String, String>()
     val definitionException = IllegalArgumentException(name)
 
