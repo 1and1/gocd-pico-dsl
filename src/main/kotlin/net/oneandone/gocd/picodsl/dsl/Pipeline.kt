@@ -37,4 +37,9 @@ enum class LockBehavior {
  *  template: template1
  * ```
  */
-data class Template(val name: String, val stage: String)
+data class Template(val name: String, val lastStage: String){
+    init {
+        require(name.isNotBlank()) { "template must be named"}
+        require(lastStage.isNotBlank()) { "stage must be defined"}
+    }
+}

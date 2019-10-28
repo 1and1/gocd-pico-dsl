@@ -1,7 +1,6 @@
 format_version: 3
-
 pipelines:
-  p1:
+  dev-1:
     group: dev
     label_template: ${material1}
     lock_behavior: unlockWhenFinished
@@ -9,30 +8,51 @@ pipelines:
       material1:
         package: material1
     template: template1
-  p2:
+  dev-2:
     group: dev
-    label_template: ${p1}
+    label_template: ${dev-1}
     lock_behavior: unlockWhenFinished
     materials:
-      p1:
-        pipeline: p1
+      dev-1:
+        pipeline: dev-1
         stage: stage1
     template: template2
-  qa-p1:
+  qa-A1:
     group: qa
-    label_template: ${p2}
+    label_template: ${dev-2}
     lock_behavior: unlockWhenFinished
     materials:
-      p2:
-        pipeline: p2
+      dev-2:
+        pipeline: dev-2
         stage: stage2
     template: template1
-  qa-p2:
+  qa-B:
     group: qa
-    label_template: ${qa-p1}
+    label_template: ${dev-2}
     lock_behavior: unlockWhenFinished
     materials:
-      qa-p1:
-        pipeline: qa-p1
-        stage: stage1
+      dev-2:
+        pipeline: dev-2
+        stage: stage2
     template: template2
+  qa-A2:
+    group: qa
+    label_template: ${qa-A1}
+    lock_behavior: unlockWhenFinished
+    materials:
+      qa-A1:
+        pipeline: qa-A1
+        stage: stage1
+    template: template1
+  fan-in:
+    group: other
+    label_template: ${qa-A2}
+    lock_behavior: unlockWhenFinished
+    materials:
+      qa-A2:
+        pipeline: qa-A2
+        stage: stage1
+      qa-B:
+        pipeline: qa-B
+        stage: stage2
+    template: template1

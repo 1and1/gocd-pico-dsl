@@ -15,22 +15,22 @@
  */
 package net.oneandone.gocd.picodsl.configs
 
-import net.oneandone.gocd.picodsl.dsl.LockBehavior
 import net.oneandone.gocd.picodsl.dsl.gocd
 
-val gocdTwoPipelines = gocd {
+val gocdWithContext = gocd {
     pipelines {
         sequence {
             group("dev") {
-                pipeline("p1") {
+                forAll {
+                    template = template1
+                }
+                pipeline("dev-1") {
                     materials {
                         repoPackage("material1")
                     }
-                    template = template1
                 }
-                pipeline("p2") {
-                    template = template2
-                    lockBehavior = LockBehavior.none
+
+                pipeline("dev-2") {
                 }
             }
         }

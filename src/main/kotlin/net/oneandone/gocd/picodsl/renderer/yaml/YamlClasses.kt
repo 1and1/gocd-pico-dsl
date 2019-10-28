@@ -80,7 +80,7 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val 
     val materials: Map<String, Map<String, String>>
         get() {
             return when {
-                pipelineSingle.materials?.materials?.isNotEmpty() == true -> pipelineSingle.materials!!.materials.map {
+                pipelineSingle.materials?.isNotEmpty() == true -> pipelineSingle.materials!!.map {
                     it.name to mapOf(
                             "package" to it.name
                     )

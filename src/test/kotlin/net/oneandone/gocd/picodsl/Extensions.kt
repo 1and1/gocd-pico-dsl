@@ -18,9 +18,12 @@ package net.oneandone.gocd.picodsl
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 
+
+private val yamlReader = ObjectMapper(YAMLFactory())
+private val objectMapper = ObjectMapper()
+
 /** Yaml String to JSON */
 fun String.toJson(): String {
-    val objectMapper = ObjectMapper(YAMLFactory())
-    val yamlObject = objectMapper.readValue(this, Any::class.java)
-    return ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(yamlObject)
+    val yamlObject = yamlReader.readValue(this, Any::class.java)
+    return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(yamlObject)
 }

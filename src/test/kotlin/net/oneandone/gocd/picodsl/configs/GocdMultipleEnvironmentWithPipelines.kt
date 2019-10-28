@@ -15,23 +15,33 @@
  */
 package net.oneandone.gocd.picodsl.configs
 
-import net.oneandone.gocd.picodsl.dsl.LockBehavior
+import net.oneandone.gocd.picodsl.dsl.GocdEnvironment
 import net.oneandone.gocd.picodsl.dsl.gocd
 
-val gocdTwoPipelines = gocd {
+val devEnv =  GocdEnvironment("dev").envVar("envKey", "envValue")
+val qaEnv =  GocdEnvironment("qa").envVar("envKeyQa", "envValueQa")
+
+val multipleEnvironmentWithPipelines = gocd {
+    environments {
+        add(devEnv)
+        add(qaEnv)
+    }
     pipelines {
         sequence {
-            group("dev") {
-                pipeline("p1") {
-                    materials {
-                        repoPackage("material1")
-                    }
-                    template = template1
+            pipeline("p1") {
+                materials {
+                    repoPackage("package")
                 }
-                pipeline("p2") {
-                    template = template2
-                    lockBehavior = LockBehavior.none
-                }
+                environment = devEnv
+                group = "dev"
+                template = template1
+            }
+            pipeline("p2") {
+                environment = qaEnv
+                group = "qa"
+                template = template2
+                envVar("envPipelineKey", "envPipelineValue")
+                envVar("envPipelineInteger", 42)
             }
         }
     }

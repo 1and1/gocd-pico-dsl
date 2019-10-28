@@ -53,12 +53,13 @@ object NonNullRepresenter: Representer() {
 
 fun GocdConfig.toYaml() = YamlConfig(this).dumpAsYaml()
 
+private val yaml = Yaml(NonNullRepresenter, DumperOptions().apply {
+    isPrettyFlow = true
+    defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
+    isAllowReadOnlyProperties = true
+    isCanonical = false
+})
+
 fun Any.dumpAsYaml(): String {
-    val options = DumperOptions()
-    options.isPrettyFlow = true
-    options.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
-    options.isAllowReadOnlyProperties = true
-    options.isCanonical = false
-    val yaml = Yaml(NonNullRepresenter, options)
     return yaml.dump(this)
 }

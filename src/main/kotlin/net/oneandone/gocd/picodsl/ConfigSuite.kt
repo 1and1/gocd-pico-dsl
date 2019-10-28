@@ -16,22 +16,29 @@
 package net.oneandone.gocd.picodsl
 
 import net.oneandone.gocd.picodsl.dsl.GocdConfig
+import net.oneandone.gocd.picodsl.renderer.toDot
 import net.oneandone.gocd.picodsl.renderer.toYaml
 import java.io.File
-import java.nio.file.Path
-import java.nio.file.Paths
 
-class ConfigSuite(vararg configs: GocdConfig, private val outputFolder: Path = Paths.get(".")) {
+class ConfigSuite(vararg configs: GocdConfig, private val outputFolder: File = File(".")) {
     private val configs: List<GocdConfig> = configs.toList()
 
-    fun writeFiles() {
-        if (!outputFolder.toFile().mkdirs()) {
-            throw IllegalStateException("output folder could not be created: ${outputFolder}")
+    fun writeYamlFiles() = write({ it.toYaml() }, "gocd.yaml")
+
+    fun writeDotFiles() = write({it.toDot()}, "dot")
+
+    fun writePlantUmlDotFiles() = write({it.toDot(true)}, "puml")
+
+    private fun write(render: (GocdConfig) -> String, extension: String): List<File> {
+        if (!(outputFolder.exists() || outputFolder.mkdirs())) {
+            throw IllegalStateException("output folder could not be created: $outputFolder")
         }
 
-        configs.forEachIndexed { index, gocdConfig ->
-            val yamlString = gocdConfig.toYaml()
-            File(outputFolder.toFile(), "pipelines-${gocdConfig.name ?: index}.gocd.yaml").writeText(yamlString)
+        return configs.mapIndexed { index, gocdConfig ->
+            val rendered = render(gocdConfig)
+            File(outputFolder, "pipelines-${gocdConfig.name ?: index}.$extension").apply {
+                writeText(rendered)
+            }
         }
     }
 }

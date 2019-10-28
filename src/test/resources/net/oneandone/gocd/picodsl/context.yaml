@@ -1,7 +1,6 @@
 format_version: 3
-
 pipelines:
-  p1:
+  dev-1:
     group: dev
     label_template: ${material1}
     lock_behavior: unlockWhenFinished
@@ -9,12 +8,12 @@ pipelines:
       material1:
         package: material1
     template: template1
-  p2:
+  dev-2:
     group: dev
-    label_template: ${p1}
-    lock_behavior: none
+    label_template: ${dev-1}
+    lock_behavior: unlockWhenFinished
     materials:
-      p1:
-        pipeline: p1
+      dev-1:
+        pipeline: dev-1
         stage: stage1
-    template: template2
+    template: template1

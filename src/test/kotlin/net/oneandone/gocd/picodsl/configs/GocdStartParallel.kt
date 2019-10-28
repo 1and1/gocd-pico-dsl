@@ -15,22 +15,29 @@
  */
 package net.oneandone.gocd.picodsl.configs
 
-import net.oneandone.gocd.picodsl.dsl.LockBehavior
 import net.oneandone.gocd.picodsl.dsl.gocd
 
-val gocdTwoPipelines = gocd {
+val gocdStartParallel = gocd {
     pipelines {
-        sequence {
+        parallel {
             group("dev") {
-                pipeline("p1") {
+                pipeline("A") {
+                    template = template1
                     materials {
                         repoPackage("material1")
                     }
-                    template = template1
+
                 }
-                pipeline("p2") {
-                    template = template2
-                    lockBehavior = LockBehavior.none
+                sequence {
+                    pipeline("B1") {
+                        template = template2
+                        materials {
+                            repoPackage("material2")
+                        }
+                    }
+                    pipeline("B2") {
+                        template = template2
+                    }
                 }
             }
         }

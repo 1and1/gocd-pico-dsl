@@ -264,7 +264,7 @@ class PipelineSequence : PipelineGroup() {
     override fun getEndingPipelines(): List<PipelineSingle> = pipelinesInContainer.last().getEndingPipelines()
 
     fun parallel(init: PipelineParallel.() -> Unit): PipelineParallel {
-        val lastPipeline = if (pipelinesInContainer.isNotEmpty()) pipelinesInContainer.last() as PipelineSingle else null
+        val lastPipeline = pipelinesInContainer.lastOrNull() as PipelineSingle?
         val pipelineParallel = PipelineParallel(lastPipeline)
         pipelineParallel.init()
 
@@ -322,40 +322,44 @@ class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGrou
     }
 }
 
-data class PipelineSingle(val name: String) : PipelineContainer() {
+class PipelineSingle(val name: String) : PipelineContainer() {
     val tags = mutableMapOf<String, String>()
     val definitionException = IllegalArgumentException(name)
 
     init {
+        require(name.isNotBlank()) { "pipeline must be named"}
+
         definitionException.fillInStackTrace()
         val filtered = definitionException.stackTrace.filter { !it.className.startsWith("net.oneandone.gocd.picodsl.dsl") }
 
         definitionException.stackTrace = filtered.toTypedArray()
     }
 
+    /**
+     *  Tag is not represented in yaml config.
+     **/
     fun tag(key: String, value: String) {
         tags[key] = value
     }
 
-    var lockBehavior: LockBehavior = LockBehavior.unlockWhenFinished
+    var lockBehavior = LockBehavior.unlockWhenFinished
 
     val lastStage: String
-        get() {
-            require(template != null || stages.size > 0) {
+        get() =
+            requireNotNull(template?.lastStage ?: stages.lastOrNull()?.name) {
                 "Pipeline has neither template nor stages"
             }
-            return template?.stage ?: stages.last().name
-        }
 
-    var parameters = mutableMapOf<String, String>()
-    var environmentVariables = mutableMapOf<String, String>()
+
+    val parameters = mutableMapOf<String, String>()
+    val environmentVariables = mutableMapOf<String, String>()
 
     var template: Template? = null
     var group: String? = null
     var environment: GocdEnvironment? = null
 
     // todo trennung zwischen Builder f. DSL und Objekt
-    var stages: MutableList<Stage> = mutableListOf()
+    val stages: MutableList<Stage> = mutableListOf()
     var materials: Materials? = null
 
     override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
@@ -403,10 +407,9 @@ data class PipelineSingle(val name: String) : PipelineContainer() {
     }
 }
 
-fun pathToPipeline(graph: Graph<PipelineSingle, DefaultEdge>, to: PipelineSingle, matcher: (PipelineSingle) -> Boolean): String {
-
-    val candidates = graph.vertexSet().filter(matcher)
-    val dijkstraAlg = DijkstraShortestPath(graph)
+fun Graph<PipelineSingle, DefaultEdge>.pathToPipeline(to: PipelineSingle, fromMatcher: (PipelineSingle) -> Boolean): String {
+    val candidates = this.vertexSet().filter(fromMatcher)
+    val dijkstraAlg = DijkstraShortestPath(this)
 
     val shortestPath = candidates.map { candidate ->
         val startPath = dijkstraAlg.getPaths(candidate)
@@ -414,7 +417,7 @@ fun pathToPipeline(graph: Graph<PipelineSingle, DefaultEdge>, to: PipelineSingle
     }.minBy { it.size } ?: throw IllegalArgumentException("no path found to $to", to.definitionException)
 
     return shortestPath.joinToString(separator = "/") { edge ->
-        graph.getEdgeSource(edge).name
+        this.getEdgeSource(edge).name
     }
 }
 

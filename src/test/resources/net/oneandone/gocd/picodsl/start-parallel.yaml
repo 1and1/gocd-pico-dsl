@@ -1,0 +1,27 @@
+format_version: 3
+pipelines:
+  A:
+    group: dev
+    label_template: ${material1}
+    lock_behavior: unlockWhenFinished
+    materials:
+      material1:
+        package: material1
+    template: template1
+  B1:
+    group: dev
+    label_template: ${material2}
+    lock_behavior: unlockWhenFinished
+    materials:
+      material2:
+        package: material2
+    template: template2
+  B2:
+    group: dev
+    label_template: ${B1}
+    lock_behavior: unlockWhenFinished
+    materials:
+      B1:
+        pipeline: B1
+        stage: stage2
+    template: template2

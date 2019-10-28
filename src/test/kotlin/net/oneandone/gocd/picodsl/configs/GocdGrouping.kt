@@ -21,26 +21,39 @@ val gocdGrouping = gocd {
     pipelines {
         sequence {
             group("dev") {
-                pipeline("p1") {
+                pipeline("dev-1") {
                     materials {
                         repoPackage("material1")
                     }
                     template = template1
                 }
 
-                pipeline("p2") {
+                pipeline("dev-2") {
                     template = template2
                 }
             }
 
-            group("qa") {
-                pipeline("qa-p1") {
-                    template = template1
-                }
+            parallel {
+                group("qa") {
+                    sequence {
+                        pipeline("qa-A1") {
+                            template = template1
+                        }
 
-                pipeline("qa-p2") {
-                    template = template2
+                        pipeline("qa-A2") {
+                            template = template1
+                        }
+                    }
+
+                    pipeline("qa-B") {
+                        template = template2
+                    }
                 }
+            }
+
+            pipeline("fan-in") {
+                group = "other"
+                template = template1
             }
         }
     }

@@ -1,3 +1,4 @@
 .idea
 target
 gocd-pico-dsl.iml
+/.kotlintest/
