@@ -19,7 +19,22 @@ package net.oneandone.gocd.picodsl.dsl
  *  [gocd-yaml-config-plugin Materials](https://github.com/tomzo/gocd-yaml-config-plugin#materials)
  */
 
-sealed class Material(val name: String)
+sealed class Material(val name: String) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Material
+
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
+}
 
 class Package(name: String) : Material(name) {
     init {
@@ -27,7 +42,7 @@ class Package(name: String) : Material(name) {
     }
 }
 
-class Materials(private val materials:MutableList<Material>):List<Material> by materials {
+class Materials(private val materials:MutableList<Material>):Collection<Material> by materials {
     constructor() :this(mutableListOf< Material>()) {
     }
 

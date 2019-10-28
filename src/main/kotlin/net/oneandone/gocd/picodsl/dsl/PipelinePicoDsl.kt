@@ -222,7 +222,7 @@ class GocdPipelines {
         }
 
         val pipelineWithoutMaterialAndUpstream = graph.vertexSet().find { pipeline ->
-            (pipeline.materials?.materials?.isEmpty() ?: true) &&
+            (pipeline.materials?.isEmpty() ?: true) &&
                     graph.upstreamPipelines(pipeline).isEmpty()
         }
 
