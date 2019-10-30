@@ -33,7 +33,7 @@ link:https://github.com/tomzo/gocd-yaml-config-plugin[tomzo/gocd-yaml-config-plu
 
 Define your pipelines with DSL. Call in a main function `ConfigSuite(gocd, outputFolder = Paths.get(outputFolder)).writeFiles()` to start generation.
 
-.net.oneandone.gocd.picodsl.samples.MinimalExampleKt
+.net.oneandone.gocd.picodsl.examples.MinimalExample.kt
 [source,java]
 ----
 fun main(args: Array<String>) {
@@ -57,8 +57,6 @@ fun main(args: Array<String>) {
 }
 ----
 
-Here you can find a link:src/test/kotlin/net/oneandone/gocd/picodsl/samples/FullExample.kt[FullExample.kt]
-
 === Generate DSL
 
 Call the main function above via maven:
@@ -66,5 +64,73 @@ Call the main function above via maven:
 [source,bash]
 ----
 mvn compile exec:java -Dexec.mainClass="net.oneandone.gocd.picodsl.samples.MinimalExampleKt" -Dexec.args="target/gocd-config"
+----
+
+=== Configure Exec Plugin in pom.xml
+
+Have a look at link:examples[examples] for a working maven example.
+
+The following snippet shows two kinds how pipelines can be generated. Using the config registry and `net.oneandone.gocd.picodsl.GeneratePipelinesKt` should be easier.
+
+[source,xml]
+.examples/pom.xml
+----
+<plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>exec-maven-plugin</artifactId>
+    <version>1.6.0</version>
+    <executions>
+        <execution>
+            <id>registry-starter</id>
+            <phase>process-classes</phase>
+            <goals>
+                <goal>java</goal>
+            </goals>
+            <configuration>
+                <!--ready to use starter which renders all registered pipelines -->
+                <mainClass>net.oneandone.gocd.picodsl.GeneratePipelinesKt</mainClass>
+                <arguments>
+                    <!-- base package of pipelines -->
+                    <argument>net.oneandone.gocd.picodsl.examples.registry</argument>
+                </arguments>
+            </configuration>
+        </execution>
+        <execution>
+            <id>custom-starter</id>
+            <phase>process-classes</phase>
+            <goals>
+                <goal>java</goal>
+            </goals>
+            <configuration>
+                <!-- custom starter which calls ConfigSuite -->
+                <mainClass>net.oneandone.gocd.picodsl.examples.MinimalExampleKt</mainClass>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+=== Using the registry
+
+All objects which are derived from `RegisteredGocdConfig` are registered in `ConfigRegistry` and are automatically used by `net.oneandone.gocd.picodsl.GeneratePipelinesKt` if they are found in the defined base package.
+
+[source,java]
+.Second.kt
+----
+object Second : RegisteredGocdConfig({
+    environments() {
+        environment("devEnv") {}
+    }
+    pipelines {
+        sequence {
+            deploy("first") {
+                group = "dev"
+                materials {
+                    repoPackage("euss")
+                }
+            }
+        }
+    }
+})
 ----
 

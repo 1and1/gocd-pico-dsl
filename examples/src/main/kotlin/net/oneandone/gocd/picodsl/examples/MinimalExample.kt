@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.oneandone.gocd.picodsl.samples
+package net.oneandone.gocd.picodsl.examples
 
 import net.oneandone.gocd.picodsl.ConfigSuite
 import net.oneandone.gocd.picodsl.dsl.Template
