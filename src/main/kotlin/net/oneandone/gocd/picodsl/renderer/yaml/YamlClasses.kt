@@ -38,7 +38,7 @@ data class YamlConfig(private val config: GocdConfig) {
         get() {
             val graph = config.pipelines.graph
             val pipelineList = pipelines(graph)
-            return pipelineList.map { it.name to YamlPipeline(it, graph) }.toMap()
+            return pipelineList.filter { !it.stub }.map { it.name to YamlPipeline(it, graph) }.toMap()
         }
 
     private fun pipelines(graph: Graph<PipelineSingle, DefaultEdge>) =
@@ -51,7 +51,10 @@ data class YamlEnvironment(private val environment: GocdEnvironment, private val
 
     val pipelines: List<String>
         get() {
-            val pipelinesToRender = if (environment.pipelines.isNotEmpty()) environment.pipelines else configPipelines
+            val pipelinesToRender = when {
+                environment.pipelines.isNotEmpty() -> environment.pipelines
+                else -> configPipelines.filter { !it.stub }
+            }
             return pipelinesToRender.map { it.name }
         }
 }

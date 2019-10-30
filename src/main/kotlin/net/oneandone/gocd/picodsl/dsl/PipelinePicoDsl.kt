@@ -37,6 +37,11 @@ sealed class Context(val pipelineGroup: PipelineGroup) {
     fun pipeline(name: String, block: PipelineSingle.() -> Unit): PipelineSingle {
         return pipelineGroup.pipeline(name, block)
     }
+
+    fun stubPipeline(name: String, block: PipelineSingle.() -> Unit): PipelineSingle {
+        return pipelineGroup.stubPipeline(name, block)
+    }
+
 }
 
 class ParallelContext(val pipelineParallel: PipelineParallel) : Context(pipelineParallel) {
@@ -87,6 +92,12 @@ sealed class PipelineGroup : PipelineContainer() {
         pipelinesInContainer.add(pipelineSingle)
 
         return pipelineSingle
+    }
+
+    fun stubPipeline(name: String, block: PipelineSingle.() -> Unit): PipelineSingle {
+        return pipeline(name, block).apply {
+            stub = true
+        }
     }
 
     fun context(init: Context.() -> Unit = {}, block: Context.() -> Unit): Context {
@@ -325,6 +336,7 @@ class PipelineParallel(private val forkPipeline: PipelineSingle?) : PipelineGrou
 class PipelineSingle(val name: String) : PipelineContainer() {
     val tags = mutableMapOf<String, String>()
     val definitionException = IllegalArgumentException(name)
+    var stub = false
 
     init {
         require(name.isNotBlank()) { "pipeline must be named"}
