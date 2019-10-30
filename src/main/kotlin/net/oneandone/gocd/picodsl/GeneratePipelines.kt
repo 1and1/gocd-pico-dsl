@@ -10,7 +10,11 @@ import java.io.File
  *             second: outputFolder
  */
 fun main(args: Array<String>) {
-    val reflections = Reflections(args[0])
+    writeYamlFiles(args[0], if (args.size > 1) args[1] else "target/gocd-config")
+}
+
+fun writeYamlFiles(basePackage: String, outputFolder: String) {
+    val reflections = Reflections(basePackage)
 
     // instantiate classes in order to get them registered
     val configs = reflections.getSubTypesOf(RegisteredGocdConfig::class.java)
@@ -20,7 +24,6 @@ fun main(args: Array<String>) {
 
     println("found the following registered config classes $configs")
 
-    val outputFolder = if (args.size > 1) args[1] else "target/gocd-config"
     ConfigSuite(*ConfigRegistry.toTypedArray(), outputFolder = File(outputFolder)).writeYamlFiles()
 }
 

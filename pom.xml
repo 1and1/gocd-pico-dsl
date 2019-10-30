@@ -58,7 +58,7 @@
     </repositories>
 
     <build>
-        <sourceDirectory>src/net.oneandone.gocd.picodsl.examples.main/kotlin</sourceDirectory>
+        <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
         <plugins>
             <plugin>
