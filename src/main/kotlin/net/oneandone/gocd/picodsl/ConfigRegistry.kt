@@ -21,7 +21,7 @@ fun GocdConfig.register(): GocdConfig {
  * ```
  * @see net.oneandone.gocd.picodsl.GeneratePipelinesKt
  */
-abstract class RegisteredGocdConfig(name: String? = null, init: GocdConfig.() -> Unit) {
+abstract class RegisteredGocdConfig(init: GocdConfig.() -> Unit, name: String? = null) {
     init {
         GocdConfig(name ?: this.javaClass.simpleName.toKepabCase()).apply(init).finish().register()
     }
