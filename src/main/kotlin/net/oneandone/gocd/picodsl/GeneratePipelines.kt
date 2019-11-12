@@ -1,5 +1,6 @@
 package net.oneandone.gocd.picodsl
 
+import mu.KotlinLogging
 import org.reflections.Reflections
 import java.io.File
 
@@ -9,6 +10,9 @@ import java.io.File
  * @param args first: base package of GocdRegistries,
  *             second: outputFolder
  */
+
+private val logger = KotlinLogging.logger {}
+
 fun main(args: Array<String>) {
     writeYamlFiles(args[0], if (args.size > 1) args[1] else "target/gocd-config")
 }
@@ -22,8 +26,10 @@ fun writeYamlFiles(basePackage: String, outputFolder: String) {
         it.getDeclaredField("INSTANCE").get(null)
     }
 
-    println("found the following registered config classes $configs")
+    logger.info { "found the following registered config classes $configs" }
 
-    ConfigSuite(*ConfigRegistry.toTypedArray(), outputFolder = File(outputFolder)).writeYamlFiles()
+    val yamlFiles = ConfigSuite(*ConfigRegistry.toTypedArray(), outputFolder = File(outputFolder)).writeYamlFiles()
+
+    logger.info { "Generated yamlFiles: $yamlFiles" }
 }
 

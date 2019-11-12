@@ -15,10 +15,13 @@
  */
 package net.oneandone.gocd.picodsl.examples
 
+import mu.KotlinLogging
 import net.oneandone.gocd.picodsl.ConfigSuite
 import net.oneandone.gocd.picodsl.dsl.Template
 import net.oneandone.gocd.picodsl.dsl.gocd
 import java.io.File
+
+private val logger = KotlinLogging.logger {}
 
 fun main(args: Array<String>) {
     val gocd = gocd {
@@ -37,5 +40,7 @@ fun main(args: Array<String>) {
     }
 
     val outputFolder = if (args.isNotEmpty()) args[0] else "target/gocd-config"
-    ConfigSuite(gocd, outputFolder = File(outputFolder)).writeYamlFiles()
+    val yamlFiles = ConfigSuite(gocd, outputFolder = File(outputFolder)).writeYamlFiles()
+
+    logger.info { "Generated yamlFiles: $yamlFiles" }
 }
