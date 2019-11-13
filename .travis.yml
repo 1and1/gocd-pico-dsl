@@ -1,0 +1,8 @@
+language: java
+jdk:
+  - openjdk8
+  - openjdk11
+script: "mvn -Pfoss-parent-verification --batch-mode clean verify"
+notifications:
+  email:
+    - martin.hofmannsobik@1und1.de
