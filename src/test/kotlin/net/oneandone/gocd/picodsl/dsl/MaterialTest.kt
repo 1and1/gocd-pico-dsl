@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.oneandone.gocd.picodsl
+package net.oneandone.gocd.picodsl.dsl
 
-import org.assertj.core.api.Assertions
+import nl.jqno.equalsverifier.EqualsVerifier
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-object KepabTest : Spek({
-    describe("camel case string") {
-        mapOf(
-                "camelCase" to "camel-case",
-                "camelCaseTwice" to "camel-case-twice",
-                "CamelCase" to "camel-case"
-        ).forEach { (input, output) ->
-            it("$input -> $output") {
-                Assertions.assertThat(input.toKepabCase()).isEqualTo(output)
-            }
+object MaterialTest : Spek({
+
+    describe("material equal and hashcode") {
+        it("fulfills equals contract") {
+            EqualsVerifier.forClass(Material::class.java).verify()
         }
+
     }
 })

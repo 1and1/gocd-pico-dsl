@@ -26,7 +26,7 @@ import java.io.File
 object YamlRendererTest: Spek({
     describe("Test DSLs against expected Yamls") {
         mapOf(
-                gocd {  } to "no-pipeline.yaml",
+                gocd { } to "no-pipeline.yaml",
                 gocdTwoPipelines to "two-pipelines.yaml",
                 singleEnvironmentWithPipelines to "single-environment-with-pipelines.yaml",
                 multipleEnvironmentWithPipelines to "multiple-environments-with-pipelines.yaml",
@@ -35,7 +35,8 @@ object YamlRendererTest: Spek({
                 gocdStartParallel to "start-parallel.yaml",
                 gocdGrouping to "grouping.yaml",
                 gocdPathToPipeline to "path-to-pipeline.yaml",
-                gocdWithContext to "context.yaml"
+                gocdWithContext to "context.yaml",
+                gocdStubPipelines to "stub-pipelines.yaml"
         ).forEach { (gocdConfig, expectedYamlFilename) ->
             describe("generating yaml for $expectedYamlFilename") {
                 val generatedYaml = gocdConfig.toYaml()

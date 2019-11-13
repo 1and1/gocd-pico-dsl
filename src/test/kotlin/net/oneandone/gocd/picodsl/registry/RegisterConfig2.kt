@@ -9,4 +9,4 @@ object RegisterConfig2 : RegisteredGocdConfig({
             startingPipelineWithMaterial()
         }
     }
-})
+}, "config2")

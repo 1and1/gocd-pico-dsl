@@ -23,8 +23,8 @@ fun GocdConfig.register(): GocdConfig {
  */
 abstract class RegisteredGocdConfig(init: GocdConfig.() -> Unit, name: String? = null) {
     init {
-        GocdConfig(name ?: this.javaClass.simpleName.toKepabCase()).apply(init).finish().register()
+        GocdConfig(name ?: this.javaClass.simpleName.toHyphenCase()).apply(init).finish().register()
     }
 }
 
-fun String.toKepabCase() = this.replace("(?<=.)([A-Z])".toRegex(), "-$1").toLowerCase()
+fun String.toHyphenCase() = this.replace("(?<=.)([A-Z])".toRegex(), "-$1").toLowerCase()

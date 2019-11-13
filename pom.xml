@@ -48,6 +48,7 @@
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <spek.version>2.0.6</spek.version>
         <spotbugs-maven-plugin.version>3.1.12.2</spotbugs-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
     </properties>
 
     <repositories>
@@ -240,6 +241,12 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>3.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>nl.jqno.equalsverifier</groupId>
+            <artifactId>equalsverifier</artifactId>
+            <version>3.1.10</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

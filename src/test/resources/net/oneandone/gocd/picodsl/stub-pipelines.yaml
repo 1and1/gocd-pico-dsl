@@ -1,0 +1,19 @@
+format_version: 3
+pipelines:
+  p1:
+    group: dev
+    label_template: ${material1}
+    lock_behavior: unlockWhenFinished
+    materials:
+      material1:
+        package: material1
+    template: template1
+  p3:
+    group: dev
+    label_template: ${stub}
+    lock_behavior: unlockWhenFinished
+    materials:
+      stub:
+        pipeline: stub
+        stage: stage1
+    template: template2

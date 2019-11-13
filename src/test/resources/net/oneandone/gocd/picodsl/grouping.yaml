@@ -27,7 +27,7 @@ pipelines:
         stage: stage2
     template: template1
   qa-B:
-    group: qa
+    group: qa-special
     label_template: ${dev-2}
     lock_behavior: unlockWhenFinished
     materials:

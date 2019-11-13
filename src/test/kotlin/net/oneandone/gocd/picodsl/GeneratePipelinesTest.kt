@@ -21,17 +21,29 @@ import org.spekframework.spek2.style.specification.describe
 import java.io.File
 
 object GeneratePipelinesTest : Spek({
-    val outputFolder = File("target/gocd-config-${System.currentTimeMillis()}")
 
-    beforeGroup {
+    beforeEachTest {
         ConfigRegistry.clear()
     }
 
-    describe("calling main in GeneratePipelines") {
+    describe("calling main in GeneratePipelines with custom folder") {
+        val outputFolder = File("target/gocd-config-${System.currentTimeMillis()}")
+
         main(arrayOf("net.oneandone.gocd.picodsl.registry", outputFolder.path))
 
         it("generates all objects with given base package") {
             assertThat(outputFolder.list()?.size).isEqualTo(2)
         }
     }
+
+    describe("calling main in GeneratePipelines with default folder") {
+        val outputFolder = File("target/gocd-config")
+
+        main(arrayOf("net.oneandone.gocd.picodsl.registry"))
+
+        it("generates all objects with given base package") {
+            assertThat(outputFolder.list()?.size).isEqualTo(2)
+        }
+    }
+
 })

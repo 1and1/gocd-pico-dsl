@@ -20,18 +20,17 @@ package net.oneandone.gocd.picodsl.dsl
  */
 
 sealed class Material(val name: String) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
 
-        other as Material
+    final override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Material) return false
 
         if (name != other.name) return false
 
         return true
     }
 
-    override fun hashCode(): Int {
+    final override fun hashCode(): Int {
         return name.hashCode()
     }
 }
@@ -47,8 +46,9 @@ class Materials(private val materials:MutableList<Material>):Collection<Material
     }
 
     /** package is a keyword, method therefore renamed to repoPackage */
-    fun repoPackage(name: String) {
+    fun repoPackage(name: String): Package {
         val repoPackage = Package(name)
         materials.add(repoPackage)
+        return repoPackage
     }
 }
