@@ -6,4 +6,5 @@ jobs:
     container:
       image:  maven:3-jdk-8-slim
     steps:
+      - uses: actions/checkout@master
       - run: mvn -Pfoss-parent-verification --batch-mode clean verify
