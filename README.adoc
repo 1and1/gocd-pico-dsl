@@ -1,5 +1,7 @@
 = GoCD Pipeline Code DSL in Kotlin
 
+image::https://api.travis-ci.org/1and1/gocd-pico-dsl.svg?branch=master[Latest Travis build from master]
+
 Generate GoCD pipelines for
 link:https://github.com/tomzo/gocd-yaml-config-plugin[tomzo/gocd-yaml-config-plugin: Plugin to declare GoCD pipelines and environments configuration in YAML] in Kotlin DSL.
 
