@@ -2,7 +2,12 @@ language: java
 jdk:
   - openjdk8
   - openjdk11
-script: "mvn -Pfoss-parent-verification --batch-mode clean verify"
+install:
+  - mvn -B -N -q io.takari:maven:wrapper -Dmaven=3.6.2
+script:
+  - MAVEN_DOWNLOAD_TRACE="${MAVEN_DOWNLOAD_TRACE:-WARN}"
+  - export MAVEN_OPTS="-Xms64m -Xmx256m -Djava.awt.headless=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=${MAVEN_DOWNLOAD_TRACE} -Dorg.slf4j.simpleLogger.showDateTime=true"
+  - ./mvnw -Pfoss-parent-verification --batch-mode clean verify
 notifications:
   email:
     - martin.hofmannsobik@1und1.de
