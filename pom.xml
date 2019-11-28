@@ -10,7 +10,7 @@
 
     <groupId>net.oneandone.gocd</groupId>
     <artifactId>gocd-pico-dsl</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3</version>
 
     <packaging>jar</packaging>
 
@@ -40,7 +40,7 @@
         <connection>scm:git:git://github.com/1and1/gocd-pico-dsl.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/1and1/gocd-pico-dsl.git</developerConnection>
         <url>https://github.com/1and1/gocd-pico-dsl/</url>
-        <tag>HEAD</tag>
+        <tag>gocd-pico-dsl-0.3</tag>
     </scm>
 
     <properties>
