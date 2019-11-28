@@ -23,13 +23,13 @@ link:https://github.com/tomzo/gocd-yaml-config-plugin[tomzo/gocd-yaml-config-plu
     </plugins>
 </build>
 <dependencies>
-    <groupId>net.oneandone.gocd</groupId>
-    <artifactId>gocd-pico-dsl</artifactId>
-    <version>1.0</version>
+    <dependency>
+        <groupId>net.oneandone.gocd</groupId>
+        <artifactId>gocd-pico-dsl</artifactId>
+        <version>0.3</version>
+    </dependency>
 </dependencies>
 ----
-
-
 
 === Define DSL
 
@@ -92,8 +92,9 @@ The following snippet shows two kinds how pipelines can be generated. Using the 
                 <!--ready to use starter which renders all registered pipelines -->
                 <mainClass>net.oneandone.gocd.picodsl.GeneratePipelinesKt</mainClass>
                 <arguments>
-                    <!-- base package of pipelines -->
-                    <argument>net.oneandone.gocd.picodsl.examples.registry</argument>
+                    <argument>--sourcePackage=net.oneandone.gocd.picodsl.examples.registry</argument>
+                    <argument>--plantuml</argument>
+                    <argument>--dot</argument>
                 </arguments>
             </configuration>
         </execution>
