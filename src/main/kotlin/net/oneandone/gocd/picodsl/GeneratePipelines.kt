@@ -16,6 +16,7 @@
 package net.oneandone.gocd.picodsl
 
 import mu.KotlinLogging
+import org.apache.commons.cli.*
 import org.reflections.Reflections
 import java.io.File
 
@@ -28,22 +29,53 @@ import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
-fun main(args: Array<String>) {
-    writeYamlFiles(args[0], if (args.size > 1) args[1] else "target/gocd-config")
+val options = Options().apply {
+    addRequiredOption("s", "sourcePackage", true, "package where the DSLs are located")
+    addOption("o", "outputFolder", true, "folder where the generated YAMLs are created")
+    addOption("d", "dot", false, "write dot files")
+    addOption("p", "plantuml", false, "write plantuml files including dot")
 }
 
-fun writeYamlFiles(basePackage: String, outputFolder: String) {
+fun main(args: Array<String>) {
+    try {
+        val cmd = DefaultParser().parse(options, args)
+        writeFiles(cmd)
+    } catch (e: ParseException) {
+        logger.error(e) { "error while parsing arguments" }
+        HelpFormatter().printHelp("net.oneandone.gocd.picodsl.GeneratePipelinesKt", options)
+    }
+}
+
+fun writeFiles(cmd: CommandLine) {
+    val basePackage = cmd.getOptionValue("sourcePackage").trim()
     val reflections = Reflections(basePackage)
 
-    // instantiate classes in order to get them registered
     val configs = reflections.getSubTypesOf(RegisteredGocdConfig::class.java)
+
+    if (configs.isEmpty()) {
+        logger.warn { "no sub types of RegisteredGocdConfig found in package '$basePackage'" }
+        return
+    }
+
+    // instantiate classes in order to get them registered
     configs.forEach {
         it.getDeclaredField("INSTANCE").get(null)
     }
 
     logger.info { "found the following registered config classes $configs" }
 
-    val yamlFiles = ConfigSuite(*ConfigRegistry.toTypedArray(), outputFolder = File(outputFolder)).writeYamlFiles()
+    val outputFolderPath = if (cmd.hasOption("o")) cmd.getOptionValue("o").trim() else "target/gocd-config"
+
+    val configSuite = ConfigSuite(*ConfigRegistry.toTypedArray(), outputFolder = File(outputFolderPath))
+    val yamlFiles = configSuite.writeYamlFiles()
+
+    if (cmd.hasOption("dot")) {
+        configSuite.writeDotFiles()
+    }
+
+    if (cmd.hasOption("plantuml")) {
+        configSuite.writePlantUmlDotFiles()
+    }
 
     logger.info { "Generated yamlFiles: $yamlFiles" }
 }

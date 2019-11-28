@@ -29,7 +29,7 @@ object GeneratePipelinesTest : Spek({
     describe("calling main in GeneratePipelines with custom folder") {
         val outputFolder = File("target/gocd-config-${System.currentTimeMillis()}")
 
-        main(arrayOf("net.oneandone.gocd.picodsl.registry", outputFolder.path))
+        main(arrayOf("-s net.oneandone.gocd.picodsl.registry", "-o ${outputFolder.path}"))
 
         it("generates all objects with given base package") {
             assertThat(outputFolder.list()?.size).isEqualTo(2)
@@ -39,11 +39,39 @@ object GeneratePipelinesTest : Spek({
     describe("calling main in GeneratePipelines with default folder") {
         val outputFolder = File("target/gocd-config")
 
-        main(arrayOf("net.oneandone.gocd.picodsl.registry"))
+        main(arrayOf("-s net.oneandone.gocd.picodsl.registry"))
 
         it("generates all objects with given base package") {
             assertThat(outputFolder.list()?.size).isEqualTo(2)
         }
+    }
+
+    describe("graph export with additional parameters") {
+        val outputFolder = File("target/gocd-config-${System.currentTimeMillis()}")
+
+        main(arrayOf(
+                "-s net.oneandone.gocd.picodsl.registry",
+                "-o ${outputFolder.path}",
+                "--plantuml",
+                "--dot"
+        ))
+
+        it("has plantuml files") {
+            val pumlFiles = outputFolder.listFiles { _: File, name: String ->
+                name.endsWith(".puml")
+            }
+
+            assertThat(pumlFiles.size).isEqualTo(2)
+        }
+
+        it("has dot files") {
+            val dotFiles = outputFolder.listFiles { _: File, name: String ->
+                name.endsWith(".dot")
+            }
+
+            assertThat(dotFiles.size).isEqualTo(2)
+        }
+
     }
 
 })

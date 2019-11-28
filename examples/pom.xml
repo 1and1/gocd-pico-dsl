@@ -49,8 +49,9 @@
                             <!--ready to use starter which renders all registered pipelines -->
                             <mainClass>net.oneandone.gocd.picodsl.GeneratePipelinesKt</mainClass>
                             <arguments>
-                                <!-- base package of pipelines -->
-                                <argument>net.oneandone.gocd.picodsl.examples.registry</argument>
+                                <argument>--sourcePackage=net.oneandone.gocd.picodsl.examples.registry</argument>
+                                <argument>--plantuml</argument>
+                                <argument>--dot</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -74,7 +75,7 @@
         <dependency>
             <groupId>net.oneandone.gocd</groupId>
             <artifactId>gocd-pico-dsl</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>0.3</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
