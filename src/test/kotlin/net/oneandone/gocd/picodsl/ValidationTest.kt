@@ -18,6 +18,8 @@ package net.oneandone.gocd.picodsl
 import net.oneandone.gocd.picodsl.configs.template1
 import net.oneandone.gocd.picodsl.configs.template2
 import net.oneandone.gocd.picodsl.dsl.*
+import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import kotlin.test.assertFailsWith
@@ -61,7 +63,7 @@ object ValidationTest : Spek({
             }
         }
         it("fails if no starting pipeline is found for pathToPipeline") {
-            assertFailsWith<IllegalArgumentException> {
+            val exception = assertFailsWith<IllegalArgumentException> {
                 gocd {
                     pipelines {
                         sequence {
@@ -76,15 +78,19 @@ object ValidationTest : Spek({
                                     template = template2
                                     graphProcessors.add {
                                         parameter("upstream", it.pathToPipeline(this) { pipeline ->
-                                            pipeline.name == "does not exist"
+                                            pipeline.name == "p5" // must not be found as it is downstream
                                         })
                                     }
+                                }
+                                pipeline("p5") {
+                                    template = template2
                                 }
                             }
                         }
                     }
                 }
             }
+            assertThat(exception.message).isEqualTo("no path found to pipeline(name=p4)")
         }
     }
 

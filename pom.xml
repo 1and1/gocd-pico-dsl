@@ -50,6 +50,7 @@
         <spotbugs-maven-plugin.version>3.1.12.2</spotbugs-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
         <jackson.version>2.10.0</jackson.version>
+        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     </properties>
 
     <repositories>

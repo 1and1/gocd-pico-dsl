@@ -31,6 +31,8 @@ object GeneratePipelinesTest : Spek({
 
         main(arrayOf("-s net.oneandone.gocd.picodsl.registry", "-o ${outputFolder.path}"))
 
+        Thread.sleep(500)
+
         it("generates all objects with given base package") {
             assertThat(outputFolder.list()?.size).isEqualTo(2)
         }
@@ -40,6 +42,8 @@ object GeneratePipelinesTest : Spek({
         val outputFolder = File("target/gocd-config")
 
         main(arrayOf("-s net.oneandone.gocd.picodsl.registry"))
+
+        Thread.sleep(500)
 
         it("generates all objects with given base package") {
             assertThat(outputFolder.list()?.size).isEqualTo(2)
@@ -55,6 +59,8 @@ object GeneratePipelinesTest : Spek({
                 "--plantuml",
                 "--dot"
         ))
+
+        Thread.sleep(1000)
 
         it("has plantuml files") {
             val pumlFiles = outputFolder.listFiles { _: File, name: String ->

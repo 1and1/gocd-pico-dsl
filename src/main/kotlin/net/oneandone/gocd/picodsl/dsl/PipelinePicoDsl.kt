@@ -20,6 +20,7 @@ import org.jgrapht.alg.shortestpath.DijkstraShortestPath
 import org.jgrapht.graph.DefaultEdge
 import org.jgrapht.graph.SimpleDirectedGraph
 import org.jgrapht.traverse.BreadthFirstIterator
+import java.lang.StringBuilder
 import java.util.*
 
 @DslMarker
@@ -338,6 +339,20 @@ class PipelineSingle(val name: String) : PipelineContainer() {
     val definitionException = IllegalArgumentException(name)
     var stub = false
 
+    override fun toString(): String {
+        val builder = StringBuilder()
+        builder.append("pipeline(name=$name")
+
+        if (tags.isNotEmpty()) {
+            builder.append(", tags=$tags")
+        }
+        if (stub) {
+            builder.append(", stub=true")
+        }
+        builder.append(")")
+        return builder.toString()
+    }
+
     init {
         require(name.isNotBlank()) { "pipeline must be named"}
 
@@ -419,13 +434,12 @@ class PipelineSingle(val name: String) : PipelineContainer() {
     }
 }
 
-fun Graph<PipelineSingle, DefaultEdge>.pathToPipeline(to: PipelineSingle, fromMatcher: (PipelineSingle) -> Boolean): String {
-    val candidates = this.vertexSet().filter(fromMatcher)
+fun Graph<PipelineSingle, DefaultEdge>.pathToPipeline(to: PipelineSingle, startMatcher: (PipelineSingle) -> Boolean): String {
+    val startPipelineCandidates: List<PipelineSingle> = this.vertexSet().filter(startMatcher)
     val dijkstraAlg = DijkstraShortestPath(this)
 
-    val shortestPath = candidates.map { candidate ->
-        val startPath = dijkstraAlg.getPaths(candidate)
-        startPath.getPath(to).edgeList
+    val shortestPath = startPipelineCandidates.mapNotNull { startCandidate ->
+        dijkstraAlg.getPaths(startCandidate).getPath(to)?.edgeList
     }.minBy { it.size } ?: throw IllegalArgumentException("no path found to $to", to.definitionException)
 
     return shortestPath.joinToString(separator = "/") { edge ->
