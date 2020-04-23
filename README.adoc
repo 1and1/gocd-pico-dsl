@@ -1,4 +1,5 @@
 = GoCD Pipeline Code DSL in Kotlin
+:toc: macro
 
 [.float-group]
 --
@@ -12,6 +13,8 @@ image::https://img.shields.io/maven-central/v/net.oneandone.gocd/gocd-pico-dsl[l
 
 Generate GoCD pipelines for
 link:https://github.com/tomzo/gocd-yaml-config-plugin[tomzo/gocd-yaml-config-plugin: Plugin to declare GoCD pipelines and environments configuration in YAML] in Kotlin DSL.
+
+toc::[]
 
 == Benefits
 
