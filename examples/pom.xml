@@ -50,6 +50,7 @@
                             <mainClass>net.oneandone.gocd.picodsl.GeneratePipelinesKt</mainClass>
                             <arguments>
                                 <argument>--sourcePackage=net.oneandone.gocd.picodsl.examples.registry</argument>
+                                <argument>--outputFolder=target/gocd-config</argument>
                                 <argument>--plantuml</argument>
                                 <argument>--dot</argument>
                             </arguments>
@@ -75,7 +76,7 @@
         <dependency>
             <groupId>net.oneandone.gocd</groupId>
             <artifactId>gocd-pico-dsl</artifactId>
-            <version>0.3</version>
+            <version>0.3.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

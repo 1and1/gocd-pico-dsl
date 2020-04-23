@@ -13,9 +13,31 @@ image::https://img.shields.io/maven-central/v/net.oneandone.gocd/gocd-pico-dsl[l
 Generate GoCD pipelines for
 link:https://github.com/tomzo/gocd-yaml-config-plugin[tomzo/gocd-yaml-config-plugin: Plugin to declare GoCD pipelines and environments configuration in YAML] in Kotlin DSL.
 
+== Benefits
+
+=== Typesafe DSL
+
+- Code completion
+- No typos
+
+=== Remove boilerplate
+
+- no need to define upstream pipelines, they are recognized by DSL structure
+- group wrapper (`group("groupName") { ... }`) which sets the group in every contained pipeline
+
+=== Validation
+When writing the YAML configuration you can make many mistakes which only occur when you import the configuration in GoCD. With the validation you recognize errors earlier:
+
+Check if pipeline has
+
+- template or stage
+- defined material or upstream pipeline
+- a group defined
+
+
 == Usage
 
-=== Setup kotlin project with GoCD DSL as dependency
+=== Setup Kotlin project with GoCD DSL as dependency
 
 [source,xml]
 .pom.xml
@@ -34,7 +56,7 @@ link:https://github.com/tomzo/gocd-yaml-config-plugin[tomzo/gocd-yaml-config-plu
     <dependency>
         <groupId>net.oneandone.gocd</groupId>
         <artifactId>gocd-pico-dsl</artifactId>
-        <version>0.3</version>
+        <version>0.3.1</version>
     </dependency>
 </dependencies>
 ----
@@ -100,7 +122,9 @@ The following snippet shows two kinds how pipelines can be generated. Using the 
                 <!--ready to use starter which renders all registered pipelines -->
                 <mainClass>net.oneandone.gocd.picodsl.GeneratePipelinesKt</mainClass>
                 <arguments>
+                    <!-- required -->
                     <argument>--sourcePackage=net.oneandone.gocd.picodsl.examples.registry</argument>
+                    <argument>--outputFolder=target/gocd-config</argument>
                     <argument>--plantuml</argument>
                     <argument>--dot</argument>
                 </arguments>
@@ -145,3 +169,46 @@ object Second : RegisteredGocdConfig({
 })
 ----
 
+=== Generate graphs
+
+If you pass the `--dot` parameter a dot file is generated in the outputfolder. This can be converted with Graphviz to an image.:
+
+[source,bash]
+----
+examples/target/gocd-config$ dot pipelines-first.dot -Tpng -o pipelines-first.png
+----
+
+The first line is the pipeline name, second the template name.
+
+image::doc/pipelines-first.png[]
+
+With `--plantuml` the same dot file is generated with a PlantUML wrapper:
+
+[source]
+----
+@startuml
+....
+@enduml
+----
+
+So it can be easily viewed in IntelliJ if you have link:https://plugins.jetbrains.com/plugin/7017-plantuml-integration[PlantUML integration - plugin for IntelliJ IDEs | JetBrains] installed.
+
+== Reference
+
+Have a look at link:examples[examples] to see most elements.
+
+=== Stubs
+
+Stubs can help you if you already have existing pipelines and want to write a GoCD DSL which is based on them.
+Stubs will not be rendered in the YAML, but are required as they are part of the materials of downstream pipelines.
+
+[source,java]
+----
+stubPipeline("existing-pipeline") {
+    template = Template("existing", "existing-stage")
+}
+
+pipeline("testing") {
+    template = testing
+}
+----
