@@ -51,8 +51,8 @@ object ValidationTest : Spek({
             assertFailsWith<IllegalArgumentException> {
                 gocd {
                     environments {
-                        environment("dev") { }
-                        environment("qa") { }
+                        environment("dev")
+                        environment("qa")
                     }
                     pipelines {
                         sequence {

@@ -4,7 +4,7 @@ import net.oneandone.gocd.picodsl.RegisteredGocdConfig
 
 object SecondUsingExtension : RegisteredGocdConfig({
     environments {
-        environment("devEnv") {}
+        environment("devEnv")
     }
     pipelines {
         sequence {

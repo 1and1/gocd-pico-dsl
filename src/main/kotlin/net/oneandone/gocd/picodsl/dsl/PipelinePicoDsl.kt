@@ -165,7 +165,7 @@ class GocdConfig(val name: String? = null) {
 class GocdEnvironments {
     val environments = mutableSetOf<GocdEnvironment>()
 
-    fun environment(name: String, block: GocdEnvironment.() -> Unit) {
+    fun environment(name: String, block: GocdEnvironment.() -> Unit = {}) {
         environments.add(GocdEnvironment(name).apply(block))
     }
 
@@ -355,7 +355,7 @@ class PipelineSingle(val name: String) : PipelineContainer() {
     }
 
     init {
-        require(name.isNotBlank()) { "pipeline must be named"}
+        require(name.isNotBlank()) { "pipeline must be named" }
 
         definitionException.fillInStackTrace()
         val filtered = definitionException.stackTrace.filter { !it.className.startsWith("net.oneandone.gocd.picodsl.dsl") }
