@@ -125,9 +125,10 @@ The following snippet shows two kinds how pipelines can be generated. Using the 
                 <!--ready to use starter which renders all registered pipelines -->
                 <mainClass>net.oneandone.gocd.picodsl.GeneratePipelinesKt</mainClass>
                 <arguments>
-                    <!-- required -->
+                    <!-- sourcePackage is required -->
                     <argument>--sourcePackage=net.oneandone.gocd.picodsl.examples.registry</argument>
-                    <argument>--outputFolder=target/gocd-config</argument>
+                    <!-- other arguments are optional -->
+                    <argument>--outputFolder=target/gocd-config</argument><!-- default: target/gocd-config -->
                     <argument>--plantuml</argument>
                     <argument>--dot</argument>
                 </arguments>

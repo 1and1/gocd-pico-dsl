@@ -46,11 +46,13 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <!--ready to use starter which renders all registered pipelines -->
+                            <!--ready to use starter which renders all registered pipelines in the given sourcePackage -->
                             <mainClass>net.oneandone.gocd.picodsl.GeneratePipelinesKt</mainClass>
                             <arguments>
+                                <!-- sourcePackage is required -->
                                 <argument>--sourcePackage=net.oneandone.gocd.picodsl.examples.registry</argument>
-                                <argument>--outputFolder=target/gocd-config</argument>
+                                <!-- other arguments are optional -->
+                                <argument>--outputFolder=target/gocd-config</argument><!-- default: target/gocd-config -->
                                 <argument>--plantuml</argument>
                                 <argument>--dot</argument>
                             </arguments>
