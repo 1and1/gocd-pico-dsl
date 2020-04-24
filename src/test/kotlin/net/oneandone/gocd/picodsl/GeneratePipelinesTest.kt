@@ -27,7 +27,7 @@ object GeneratePipelinesTest : Spek({
     }
 
     describe("calling main in GeneratePipelines with custom folder") {
-        val outputFolder = File("target/gocd-config-${System.currentTimeMillis()}")
+        val outputFolder = File("target/gocd-config-custom-folder-${System.currentTimeMillis()}")
 
         main(arrayOf("-s net.oneandone.gocd.picodsl.registry", "-o ${outputFolder.path}"))
 
@@ -40,6 +40,9 @@ object GeneratePipelinesTest : Spek({
 
     describe("calling main in GeneratePipelines with default folder") {
         val outputFolder = File("target/gocd-config")
+        if (outputFolder.exists()) {
+            outputFolder.delete()
+        }
 
         main(arrayOf("-s net.oneandone.gocd.picodsl.registry"))
 
@@ -51,7 +54,7 @@ object GeneratePipelinesTest : Spek({
     }
 
     describe("graph export with additional parameters") {
-        val outputFolder = File("target/gocd-config-${System.currentTimeMillis()}")
+        val outputFolder = File("target/gocd-config-params-${System.currentTimeMillis()}")
 
         main(arrayOf(
                 "-s net.oneandone.gocd.picodsl.registry",
@@ -67,7 +70,7 @@ object GeneratePipelinesTest : Spek({
                 name.endsWith(".puml")
             }
 
-            assertThat(pumlFiles.size).isEqualTo(2)
+            assertThat(pumlFiles?.size).isEqualTo(2)
         }
 
         it("has dot files") {
@@ -75,7 +78,7 @@ object GeneratePipelinesTest : Spek({
                 name.endsWith(".dot")
             }
 
-            assertThat(dotFiles.size).isEqualTo(2)
+            assertThat(dotFiles?.size).isEqualTo(2)
         }
 
     }
