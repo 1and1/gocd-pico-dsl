@@ -215,3 +215,72 @@ pipeline("testing") {
     template = testing
 }
 ----
+
+== Writing you own Extensions (for advanced users)
+
+GoCD DSL facilitates pipeline writing as much as possible for the generic use case. If you use GoCD in your company you will define best practices and standards.
+
+You can reflect these standards in the DSL to maker you definition even shorter.
+
+If you provide for deployment a "deploy" template, you can define your custom deploy pipeline:
+
+[source,java]
+----
+val deployTemplate = Template("deploy", "deploy-stage")
+
+fun PipelineGroup.deploy(name: String, block: PipelineSingle.() -> Unit = {}) {
+    this.pipeline(name, block).apply {
+        template = deployTemplate
+        parameter("param1", "value1")
+    }
+}
+----
+
+This deploy extension function creates the pipeline as usual and afterwards sets the template and defines also a parameter which is required by the template.
+
+[source,java]
+.SecondUsingExtension.kt
+----
+pipelines {
+    sequence {
+        deploy("first") {
+            group = "dev"
+            materials {
+                repoPackage("euss")
+            }
+        }
+    }
+}
+----
+
+For a better understanding see link:https://kotlinlang.org/docs/reference/extensions.html[Extensions - Kotlin Programming Language].
+
+If you want to use your extension function in the group scope, you must add the extension function to every possible scope. This might look scary, but the pattern is always the same: Define extension functions for `PipelineGroup`, `SequenceContext`, `ParallelContext` andd delegate to a function which adds your custom functionality.
+
+[source,java]
+.PipelineExtensions.java
+----
+fun PipelineGroup.deploy(
+        name: String,
+        block: PipelineSingle.() -> Unit = {}
+) = deployPipeline(this, name, block)
+
+fun SequenceContext.deploy(
+        name: String,
+        block: PipelineSingle.() -> Unit = {}
+) = deployPipeline(this.pipelineGroup, name, block)
+
+fun ParallelContext.deploy(
+        name: String,
+        block: PipelineSingle.() -> Unit = {}
+) = deployPipeline(this.pipelineGroup, name, block)
+
+private fun deployPipeline(pipelineGroup: PipelineGroup, name: String, block: PipelineSingle.() -> Unit) {
+    pipelineGroup.pipeline(name, block).apply {
+        template = deploy
+        parameter("param1", "value1")
+    }
+}
+----
+
+For a better understanding why wee need to extend every scope have a look at Kotlin DSLs: link:https://kotlinlang.org/docs/reference/type-safe-builders.html#scope-control-dslmarker-since-11[Type-Safe Builders: Scope Control - Kotlin Programming Language].
