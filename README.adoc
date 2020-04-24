@@ -258,7 +258,7 @@ For a better understanding see link:https://kotlinlang.org/docs/reference/extens
 If you want to use your extension function in the group scope, you must add the extension function to every possible scope. This might look scary, but the pattern is always the same: Define extension functions for `PipelineGroup`, `SequenceContext`, `ParallelContext` andd delegate to a function which adds your custom functionality.
 
 [source,java]
-.PipelineExtensions.java
+.PipelineExtensions.kt
 ----
 fun PipelineGroup.deploy(
         name: String,
