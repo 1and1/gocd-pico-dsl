@@ -78,7 +78,7 @@
         <dependency>
             <groupId>net.oneandone.gocd</groupId>
             <artifactId>gocd-pico-dsl</artifactId>
-            <version>0.3.2-SNAPSHOT</version>
+            <version>0.3.2</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

@@ -59,7 +59,7 @@ Check if pipeline has
     <dependency>
         <groupId>net.oneandone.gocd</groupId>
         <artifactId>gocd-pico-dsl</artifactId>
-        <version>0.3.1</version>
+        <version>0.3.2</version>
     </dependency>
 </dependencies>
 ----
