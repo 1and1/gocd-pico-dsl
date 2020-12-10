@@ -34,7 +34,7 @@ data class YamlConfig(private val config: GocdConfig) {
             return config.environments.environments.map { it.name to YamlEnvironment(it, pipelines(config.pipelines.graph)) }.toMap()
         }
 
-    val pipelines : Map<String, YamlPipeline>
+    val pipelines: Map<String, YamlPipeline>
         get() {
             val graph = config.pipelines.graph
             val pipelineList = pipelines(graph)
@@ -72,6 +72,10 @@ data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val 
             val materials = materials.entries
             return "${'$'}{${materials.first().key}}"
         }
+
+    val timer: YamlTimer?
+        get() = pipelineSingle.timer?.let { YamlTimer(it) }
+
     val group
         get() = pipelineSingle.group
     val parameters: Map<String, String>
@@ -114,4 +118,12 @@ class YamlStage(private val stage: Stage) {
 class YamlJob(private val job: Job) {
     val tasks
         get() = job.tasks
+}
+
+class YamlTimer(private val timer: QuartzTimer) {
+    val spec
+        get() = timer.spec
+
+    val only_on_changes
+        get() = timer.onlyOnChanges
 }

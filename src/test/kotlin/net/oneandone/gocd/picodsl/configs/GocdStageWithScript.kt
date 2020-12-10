@@ -26,6 +26,7 @@ val gocdStageWithScript = gocd {
                 materials {
                     repoPackage("material1")
                 }
+                timer("0 15 10 * * ? *", true)
                 stage("DEV", true) {
                     job("jobOne") {
                         script("echo one")

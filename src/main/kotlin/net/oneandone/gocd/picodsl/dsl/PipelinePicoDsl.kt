@@ -389,6 +389,7 @@ class PipelineSingle(val name: String) : PipelineContainer() {
     // todo trennung zwischen Builder f. DSL und Objekt
     val stages: MutableList<Stage> = mutableListOf()
     var materials: Materials? = null
+    var timer: QuartzTimer? = null
 
     override fun addPipelineGroupToGraph(graph: Graph<PipelineSingle, DefaultEdge>) {
         graph.addVertex(this)
@@ -432,6 +433,10 @@ class PipelineSingle(val name: String) : PipelineContainer() {
 
     override fun finish() {
         environment?.addPipeline(this)
+    }
+
+    fun timer(spec: String, onlyOnChanges: Boolean? = null) {
+        timer = QuartzTimer(spec, onlyOnChanges)
     }
 }
 

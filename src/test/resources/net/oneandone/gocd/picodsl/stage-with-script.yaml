@@ -17,6 +17,9 @@ pipelines:
             jobTwo:
               tasks:
                 - script: echo two
+    timer:
+      only_on_changes: true
+      spec: 0 15 10 * * ? *
   p2:
     group: qa
     label_template: ${p1}
