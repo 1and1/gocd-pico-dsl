@@ -18,5 +18,5 @@ package net.oneandone.gocd.picodsl.dsl
 /**
  *  [gocd-yaml-config-plugin Tasks](https://github.com/tomzo/gocd-yaml-config-plugin#tasks)
  */
-data class QuartzTimer(var spec: String, var onlyOnChanges: Boolean?)
+data class QuartzTimer(val spec: String, val onlyOnChanges: Boolean?)
 
