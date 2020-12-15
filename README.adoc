@@ -217,6 +217,28 @@ pipeline("testing") {
 }
 ----
 
+=== timer (since 0.3.3)
+See link:https://docs.gocd.org/current/configuration/admin_timer.html[Timer Trigger | GoCD User Documentation] and https://github.com/tomzo/gocd-yaml-config-plugin#timer.
+
+[source, kotlin]
+----
+pipeline("p1") {
+    timer("0 15 10 * * ? *", true)
+----
+
+generates
+
+[source,yaml]
+----
+p1:
+timer:
+  only_on_changes: true
+  spec: 0 15 10 * * ? *
+
+----
+
+Second parameter for `onlyOnChanges` is optional: `timer("0 15 10 * * ? *")` is valid too and the YAML element is omitted in that case.
+
 == Writing you own Extensions (for advanced users)
 
 GoCD DSL facilitates pipeline writing as much as possible for the generic use case. If you use GoCD in your company you will define best practices and standards.
