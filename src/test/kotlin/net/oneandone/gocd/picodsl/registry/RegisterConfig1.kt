@@ -19,6 +19,9 @@ import net.oneandone.gocd.picodsl.RegisteredGocdConfig
 import net.oneandone.gocd.picodsl.configs.startingPipelineWithMaterial
 
 object RegisterConfig1 : RegisteredGocdConfig({
+    environments {
+        add(env1)
+    }
     pipelines {
         sequence {
             startingPipelineWithMaterial()

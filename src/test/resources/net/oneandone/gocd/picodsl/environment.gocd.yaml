@@ -4,6 +4,3 @@ environments:
   testing:
     environment_variables:
       DEPLOYMENT: testing
-    pipelines:
-      - one
-      - two

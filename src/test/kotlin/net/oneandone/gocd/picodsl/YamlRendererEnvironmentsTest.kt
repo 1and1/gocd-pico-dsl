@@ -30,11 +30,9 @@ object YamlRendererEnvironmentsTest: Spek({
                 environments {
                     environment("testing") {
                         envVar("DEPLOYMENT", "testing")
-                        addPipeline(PipelineSingle("one"))
-                        addPipeline(PipelineSingle("two"))
                     }
                 }
-            }
+            }.finish()
 
             val generatedYaml = gocdConfig.toYaml()
             val expectedYamlFilename = "environment.gocd.yaml"

@@ -128,6 +128,7 @@ sealed class PipelineGroup : PipelineContainer() {
 class GocdConfig(val name: String? = null) {
     val pipelines = GocdPipelines()
     val environments = GocdEnvironments()
+    val environmentPipelines = mutableMapOf<GocdEnvironment, MutableSet<PipelineSingle>>()
 
     fun pipelines(block: GocdPipelines.() -> Unit) {
         pipelines.block()
@@ -141,23 +142,34 @@ class GocdConfig(val name: String? = null) {
     fun finish(): GocdConfig {
         pipelines.finish()
 
-        // use all environments which are referenced in pipelines
+        environments.environments.forEach {
+            environmentPipelines.putIfAbsent(it, mutableSetOf())
+        }
+
+        // use environment from pipeline or single one from environment definition
         pipelines.pipelines().forEach { pipeline ->
-            pipeline.environment?.let {
-                environments.environments.add(it)
+            val env = if (pipeline.environment != null) {
+                pipeline.environment!!
+            } else {
+                require(environments.environments.isEmpty() || environments.environments.size == 1) {
+                    "If pipeline has no environment only one environment is allowed."
+                }
+                if (environments.environments.size == 1) {
+                    environments.environments.first()
+                } else {
+                    null
+                }
+            }
+            env?.let {
+                environmentPipelines.getOrPut(it) { mutableSetOf() }.apply { add(pipeline) }
             }
         }
 
-        validate()
         return this
     }
 
-    private fun validate() {
-        environments.environments.forEach {
-            require(it.pipelines.isNotEmpty() || environments.environments.size == 1) {
-                "If environment does not list pipelines only one environment is allowed."
-            }
-        }
+    fun pipelinesForEnv(environment: GocdEnvironment): List<PipelineSingle> {
+        return environmentPipelines[environment]?.toList() ?: pipelines.pipelines()
     }
 }
 
@@ -182,17 +194,10 @@ class GocdEnvironments {
 }
 
 @PipelinePicoDslMarker
-class GocdEnvironment(val name: String) {
-    val environmentVariables = mutableMapOf<String, String>()
-    val pipelines = mutableListOf<PipelineSingle>()
-
+class GocdEnvironment(val name: String, val environmentVariables: MutableMap<String, String> = mutableMapOf()) {
     fun envVar(key: String, value: String): GocdEnvironment {
         environmentVariables[key] = value
         return this
-    }
-
-    fun addPipeline(pipelineSingle: PipelineSingle) {
-        pipelines.add(pipelineSingle)
     }
 }
 
@@ -436,10 +441,6 @@ class PipelineSingle(val name: String) : PipelineContainer() {
         materials.init()
         this.materials = materials
         return materials
-    }
-
-    override fun finish() {
-        environment?.addPipeline(this)
     }
 
     fun timer(spec: String, onlyOnChanges: Boolean? = null) {

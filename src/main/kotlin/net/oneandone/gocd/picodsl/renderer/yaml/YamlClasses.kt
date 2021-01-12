@@ -18,7 +18,6 @@ package net.oneandone.gocd.picodsl.renderer.yaml
 import net.oneandone.gocd.picodsl.dsl.*
 import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
-import org.jgrapht.traverse.BreadthFirstIterator
 
 /**
  * Class represents the YAML structure
@@ -31,18 +30,17 @@ data class YamlConfig(private val config: GocdConfig) {
 
     val environments: Map<String, YamlEnvironment>
         get() {
-            return config.environments.environments.map { it.name to YamlEnvironment(it, pipelines(config.pipelines.graph)) }.toMap()
+            return config.environmentPipelines.map { it.key }.map {
+                it.name to YamlEnvironment(it, config.pipelinesForEnv(it))
+            }.toMap()
         }
 
     val pipelines: Map<String, YamlPipeline>
         get() {
             val graph = config.pipelines.graph
-            val pipelineList = pipelines(graph)
+            val pipelineList = config.pipelines.pipelines()
             return pipelineList.filter { !it.stub }.map { it.name to YamlPipeline(it, graph) }.toMap()
         }
-
-    private fun pipelines(graph: Graph<PipelineSingle, DefaultEdge>) =
-            BreadthFirstIterator(graph).asSequence().toList()
 }
 
 data class YamlEnvironment(private val environment: GocdEnvironment, private val configPipelines: List<PipelineSingle>) {
@@ -51,14 +49,9 @@ data class YamlEnvironment(private val environment: GocdEnvironment, private val
 
     val pipelines: List<String>
         get() {
-            val pipelinesToRender = when {
-                environment.pipelines.isNotEmpty() -> environment.pipelines
-                else -> configPipelines.filter { !it.stub }
-            }
-            return pipelinesToRender.map { it.name }
+            return configPipelines.filter { !it.stub }.map { it.name }
         }
 }
-
 
 data class YamlPipeline(private val pipelineSingle: PipelineSingle, private val graph: Graph<PipelineSingle, DefaultEdge>) {
     val template
