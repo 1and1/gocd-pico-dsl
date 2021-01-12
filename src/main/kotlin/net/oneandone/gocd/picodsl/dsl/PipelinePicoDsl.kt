@@ -165,12 +165,19 @@ class GocdConfig(val name: String? = null) {
 class GocdEnvironments {
     val environments = mutableSetOf<GocdEnvironment>()
 
-    fun environment(name: String, block: GocdEnvironment.() -> Unit = {}) {
-        environments.add(GocdEnvironment(name).apply(block))
+    fun environment(name: String, block: GocdEnvironment.() -> Unit = {}): GocdEnvironment {
+        val environment = GocdEnvironment(name).apply(block)
+        environments.add(environment)
+        return environment
     }
 
     fun add(vararg environmentsToAdd: GocdEnvironment) {
         environments.addAll(environmentsToAdd)
+    }
+
+    /** alias for add */
+    fun environment(vararg environmentsToAdd: GocdEnvironment) {
+        add(*environmentsToAdd)
     }
 }
 

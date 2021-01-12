@@ -24,7 +24,7 @@ val qaEnv =  GocdEnvironment("qa").envVar("envKeyQa", "envValueQa")
 val multipleEnvironmentWithPipelines = gocd {
     environments {
         add(devEnv)
-        add(qaEnv)
+        environment(qaEnv)
     }
     pipelines {
         sequence {
