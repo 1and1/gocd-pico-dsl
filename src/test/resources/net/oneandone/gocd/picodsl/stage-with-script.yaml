@@ -29,3 +29,5 @@ pipelines:
         pipeline: p1
         stage: DEV
     template: t1
+    timer:
+      spec: 0 15 5 * * ? *

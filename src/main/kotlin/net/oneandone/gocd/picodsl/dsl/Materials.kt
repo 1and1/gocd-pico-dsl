@@ -37,13 +37,12 @@ sealed class Material(val name: String) {
 
 class Package(name: String) : Material(name) {
     init {
-        require(name.isNotBlank()) { "package must be named"}
+        require(name.isNotBlank()) { "package must be named" }
     }
 }
 
-class Materials(private val materials:MutableList<Material>):Collection<Material> by materials {
-    constructor() :this(mutableListOf< Material>()) {
-    }
+class Materials(private val materials: MutableList<Material>) : Collection<Material> by materials {
+    constructor() : this(mutableListOf<Material>())
 
     /** package is a keyword, method therefore renamed to repoPackage */
     fun repoPackage(name: String): Package {

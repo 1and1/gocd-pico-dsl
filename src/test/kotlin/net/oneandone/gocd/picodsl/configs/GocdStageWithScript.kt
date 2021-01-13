@@ -40,6 +40,7 @@ val gocdStageWithScript = gocd {
             pipeline("p2") {
                 group = "qa"
                 template = Template("t1", "stage")
+                timer("0 15 5 * * ? *")
             }
         }
     }

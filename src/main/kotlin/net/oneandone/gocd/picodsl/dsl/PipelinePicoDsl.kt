@@ -127,7 +127,7 @@ sealed class PipelineGroup : PipelineContainer() {
  */
 class GocdConfig(val name: String? = null) {
     val pipelines = GocdPipelines()
-    val environments = GocdEnvironments()
+    private val environments = GocdEnvironments()
     val environmentPipelines = mutableMapOf<GocdEnvironment, MutableSet<PipelineSingle>>()
 
     fun pipelines(block: GocdPipelines.() -> Unit) {
@@ -148,8 +148,9 @@ class GocdConfig(val name: String? = null) {
 
         // use environment from pipeline or single one from environment definition
         pipelines.pipelines().forEach { pipeline ->
-            val env = if (pipeline.environment != null) {
-                pipeline.environment!!
+            val environment = pipeline.environment
+            val env = if (environment != null) {
+                environment
             } else {
                 require(environments.environments.isEmpty() || environments.environments.size == 1) {
                     "If pipeline has no environment only one environment is allowed."
@@ -169,6 +170,7 @@ class GocdConfig(val name: String? = null) {
     }
 
     fun pipelinesForEnv(environment: GocdEnvironment): List<PipelineSingle> {
+        // pipeline can only belong to one environment, so exclude associated
         return environmentPipelines[environment]?.toList() ?: pipelines.pipelines()
     }
 }
@@ -205,7 +207,7 @@ class GocdEnvironment(val name: String, val environmentVariables: MutableMap<Str
 class GocdPipelines {
     val graph: Graph<PipelineSingle, DefaultEdge> = SimpleDirectedGraph(DefaultEdge::class.java)
 
-    val pipelineGroups: MutableList<PipelineGroup> = mutableListOf()
+    private val pipelineGroups: MutableList<PipelineGroup> = mutableListOf()
 
     fun sequence(init: PipelineSequence.() -> Unit): PipelineSequence {
         val pipelineSequence = PipelineSequence()
