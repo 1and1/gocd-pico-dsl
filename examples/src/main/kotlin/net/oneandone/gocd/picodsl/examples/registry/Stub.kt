@@ -16,7 +16,6 @@
 package net.oneandone.gocd.picodsl.examples.registry
 
 import net.oneandone.gocd.picodsl.RegisteredGocdConfig
-import net.oneandone.gocd.picodsl.dsl.GocdEnvironment
 import net.oneandone.gocd.picodsl.dsl.Template
 
 object Stub : RegisteredGocdConfig({

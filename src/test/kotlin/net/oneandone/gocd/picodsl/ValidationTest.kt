@@ -18,7 +18,6 @@ package net.oneandone.gocd.picodsl
 import net.oneandone.gocd.picodsl.configs.template1
 import net.oneandone.gocd.picodsl.configs.template2
 import net.oneandone.gocd.picodsl.dsl.*
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
