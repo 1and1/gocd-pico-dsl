@@ -168,11 +168,6 @@ class GocdConfig(val name: String? = null) {
 
         return this
     }
-
-    fun pipelinesForEnv(environment: GocdEnvironment): List<PipelineSingle> {
-        // pipeline can only belong to one environment, so exclude associated
-        return environmentPipelines[environment]?.toList() ?: pipelines.pipelines()
-    }
 }
 
 @PipelinePicoDslMarker
@@ -456,7 +451,7 @@ fun Graph<PipelineSingle, DefaultEdge>.pathToPipeline(to: PipelineSingle, startM
 
     val shortestPath = startPipelineCandidates.mapNotNull { startCandidate ->
         dijkstraAlg.getPaths(startCandidate).getPath(to)?.edgeList
-    }.minBy { it.size } ?: throw IllegalArgumentException("no path found to $to", to.definitionException)
+    }.minByOrNull { it.size } ?: throw IllegalArgumentException("no path found to $to", to.definitionException)
 
     return shortestPath.joinToString(separator = "/") { edge ->
         this.getEdgeSource(edge).name

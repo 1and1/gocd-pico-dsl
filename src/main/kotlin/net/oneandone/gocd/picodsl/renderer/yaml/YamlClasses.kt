@@ -20,8 +20,8 @@ import org.jgrapht.Graph
 import org.jgrapht.graph.DefaultEdge
 
 /**
- * Class represents the YAML structure
- * @see https://github.com/tomzo/gocd-yaml-config-plugin#Format-reference
+ * Class represents the YAML structure,
+ * see [gocd-yaml-config-plugin - Format Reference](https://github.com/tomzo/gocd-yaml-config-plugin#Format-reference)
  * */
 
 data class YamlConfig(private val config: GocdConfig) {
@@ -30,8 +30,8 @@ data class YamlConfig(private val config: GocdConfig) {
 
     val environments: Map<String, YamlEnvironment>
         get() {
-            return config.environmentPipelines.map { it.key }.map {
-                it.name to YamlEnvironment(it, config.pipelinesForEnv(it))
+            return config.environmentPipelines.map {
+                it.key.name to YamlEnvironment(it.key, it.value.toList())
             }.toMap()
         }
 

@@ -15,8 +15,11 @@
  */
 package net.oneandone.gocd.picodsl.configs
 
+import net.oneandone.gocd.picodsl.dsl.QuartzTimer
 import net.oneandone.gocd.picodsl.dsl.Template
 import net.oneandone.gocd.picodsl.dsl.gocd
+
+val timer3 = QuartzTimer("0 15 20 * * ? *", true)
 
 val gocdStageWithScript = gocd {
     pipelines {
@@ -41,6 +44,12 @@ val gocdStageWithScript = gocd {
                 group = "qa"
                 template = Template("t1", "stage")
                 timer("0 15 5 * * ? *")
+            }
+
+            pipeline("p3") {
+                group = "qa"
+                template = Template("t1", "stage")
+                timer = timer3
             }
         }
     }

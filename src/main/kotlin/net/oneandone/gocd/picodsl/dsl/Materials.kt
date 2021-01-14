@@ -41,8 +41,7 @@ class Package(name: String) : Material(name) {
     }
 }
 
-class Materials(private val materials: MutableList<Material>) : Collection<Material> by materials {
-    constructor() : this(mutableListOf<Material>())
+class Materials(private val materials: MutableList<Material> = mutableListOf()) : Collection<Material> by materials {
 
     /** package is a keyword, method therefore renamed to repoPackage */
     fun repoPackage(name: String): Package {

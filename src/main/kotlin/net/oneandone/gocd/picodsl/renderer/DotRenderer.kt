@@ -26,7 +26,7 @@ fun GocdConfig.toDot(plantUmlWrapper: Boolean = false): String {
 
     val writer = StringWriter()
     if (plantUmlWrapper) {
-        writer.appendln("@startuml")
+        writer.appendLine("@startuml")
     }
     val dotExporter = DOTExporter<PipelineSingle, DefaultEdge>(
             { it.name.replace("-", "_") },
@@ -36,7 +36,7 @@ fun GocdConfig.toDot(plantUmlWrapper: Boolean = false): String {
     dotExporter.putGraphAttribute("rankdir", "LR")
     dotExporter.exportGraph(graph, writer)
     if (plantUmlWrapper) {
-        writer.appendln("@enduml")
+        writer.appendLine("@enduml")
     }
     return writer.toString()
 }

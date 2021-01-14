@@ -31,3 +31,15 @@ pipelines:
     template: t1
     timer:
       spec: 0 15 5 * * ? *
+  p3:
+    group: qa
+    label_template: ${p2}
+    lock_behavior: unlockWhenFinished
+    materials:
+      p2:
+        pipeline: p2
+        stage: stage
+    template: t1
+    timer:
+      only_on_changes: true
+      spec: 0 15 20 * * ? *

@@ -54,5 +54,12 @@ object MaterialsTest : Spek({
             }
         }
 
+        describe("materials list constructor") {
+            val materials = Materials(mutableListOf(Package("p1")))
+
+            it("has size 1") {
+                assertThat(materials.size).isOne()
+            }
+        }
     }
 })

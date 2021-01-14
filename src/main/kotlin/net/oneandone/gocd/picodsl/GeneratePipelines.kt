@@ -20,13 +20,6 @@ import org.apache.commons.cli.*
 import org.reflections.Reflections
 import java.io.File
 
-/**
- * Class can be used for generating all pipelines which are registered in [ConfigRegistry].
- *
- * @param args first: base package of GocdRegistries,
- *             second: outputFolder
- */
-
 private val logger = KotlinLogging.logger {}
 
 val options = Options().apply {
@@ -36,6 +29,12 @@ val options = Options().apply {
     addOption("p", "plantuml", false, "write plantuml files including dot")
 }
 
+/**
+ * Class can be used for generating all pipelines which are registered in [ConfigRegistry].
+ *
+ * @param args first: base package of GocdRegistries,
+ *             second: outputFolder
+ */
 fun main(args: Array<String>) {
     try {
         val cmd = DefaultParser().parse(options, args)

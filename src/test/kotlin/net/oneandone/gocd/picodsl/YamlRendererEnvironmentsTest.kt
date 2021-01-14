@@ -17,7 +17,6 @@ package net.oneandone.gocd.picodsl
 
 import net.javacrumbs.jsonunit.JsonAssert
 import net.oneandone.gocd.picodsl.dsl.GocdConfig
-import net.oneandone.gocd.picodsl.dsl.PipelineSingle
 import net.oneandone.gocd.picodsl.renderer.toYaml
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

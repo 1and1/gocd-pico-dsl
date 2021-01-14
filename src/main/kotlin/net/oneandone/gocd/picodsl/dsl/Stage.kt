@@ -16,7 +16,7 @@
 package net.oneandone.gocd.picodsl.dsl
 
 data class Stage(val name: String, val manualApproval: Boolean = false) {
-    var jobs : MutableList<Job> = mutableListOf()
+    val jobs : MutableList<Job> = mutableListOf()
 
     fun job(name: String, init: Job.() -> Unit): Job {
         val job = Job(name)
